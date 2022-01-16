@@ -1,11 +1,10 @@
 package de.bitsandbooks.finance.connectors.helpers;
 
 import de.bitsandbooks.finance.connectors.ForexService;
+import java.util.List;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor

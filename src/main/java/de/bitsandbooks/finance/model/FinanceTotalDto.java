@@ -11,6 +11,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class FinanceTotalDto {
-  Currency currency;
+  String currency;
   BigDecimal value;
 }

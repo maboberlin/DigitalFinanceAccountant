@@ -14,7 +14,11 @@ public abstract class AbstractFinanceDataConnector implements FinanceDataConnect
       PriceDto priceDto = this.getActualPrice(identifier).block();
       return priceDto != null;
     } catch (Exception e) {
-      log.warn("Connector '{}' could not find position for identifier: '{}'", this.getConnectorType().toString(), identifier, e);
+      log.warn(
+          "Connector '{}' could not find position for identifier: '{}'",
+          this.getConnectorType().toString(),
+          identifier,
+          e);
       return false;
     }
   }

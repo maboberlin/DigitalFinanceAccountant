@@ -8,18 +8,16 @@ import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageCurrencyD
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageQuoteDto;
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageTimeSeriesDailyAdjustedDto;
 import de.bitsandbooks.finance.connectors.helpers.RoundHelper;
-import de.bitsandbooks.finance.model.Currency;
 import de.bitsandbooks.finance.model.PriceDto;
+import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
-
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.Map;
 
 @Slf4j
 @Order(10)
@@ -71,14 +69,14 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
   }
 
   @Override
-  public Mono<PriceDto> convertToCurrency(Currency fromDto, Currency toDto) {
+  public Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency) {
     log.info(
         "Get actual currency price with '{}' API from currency '{}' to currency '{}'",
         this.getConnectorType(),
-        fromDto.getIdentifier(),
-        toDto.getIdentifier());
+        fromCurrency,
+        toCurrency);
     return alphaVantageApi
-        .getCurrencyExchange(fromDto.getIdentifier(), toDto.getIdentifier())
+        .getCurrencyExchange(fromCurrency, toCurrency)
         .map(AlphaVantageCurrencyDto::getCurrencyData)
         .map(AlphaVantageCurrencyDto.CurrencyData::get_5ExchangeRate)
         .map(RoundHelper::roundUpHalfBigDecimalDouble)
@@ -87,9 +85,9 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
                 () ->
                     new IllegalStateException(
                         "AlphaVantage API returned exchange rate with missing currency data for identifiers: "
-                            + fromDto.getIdentifier()
+                            + fromCurrency
                             + " -> "
-                            + toDto.getIdentifier())))
+                            + toCurrency)))
         .map(PriceDto::new);
   }
 

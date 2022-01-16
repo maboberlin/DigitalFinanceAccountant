@@ -25,7 +25,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   @NonNull private final UserRepository userRepository;
 
   @Override
-  public Mono<FinanceTotalDto> getTotalAmount(String userEMail, Currency currency) {
+  public Mono<FinanceTotalDto> getTotalAmount(String userEMail, String currency) {
     return getFinanceTotalDtoInternal(userEMail, currency);
   }
 
@@ -43,6 +43,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         entity -> {
           entity.setUser(userEntity);
           userEntity.getFinancePositionEntityList().add(entity);
+          entity.setCurrency(entity.getCurrency().toUpperCase());
         });
     financePositionRepository.saveAll(financePositionEntityList);
     userRepository.save(userEntity);
@@ -52,7 +53,11 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   public void putPositions(
       List<FinancePositionEntity> financePositionEntityList, String userEMail) {
     UserEntity userEntity = getUserEntity(userEMail);
-    financePositionEntityList.forEach(entity -> entity.setUser(userEntity));
+    financePositionEntityList.forEach(
+        entity -> {
+          entity.setUser(userEntity);
+          entity.setCurrency(entity.getCurrency().toUpperCase());
+        });
     userEntity.getFinancePositionEntityList().clear();
     userEntity.getFinancePositionEntityList().addAll(financePositionEntityList);
     financePositionRepository.saveAll(financePositionEntityList);
@@ -69,7 +74,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
                     String.format("Could not find user with eMail '%s'", userEMail)));
   }
 
-  private Mono<FinanceTotalDto> getFinanceTotalDtoInternal(String userEMail, Currency currency) {
+  private Mono<FinanceTotalDto> getFinanceTotalDtoInternal(String userEMail, String currency) {
     List<FinancePositionEntity> positionEntityList = this.getAllPositions(userEMail);
     return Flux.fromStream(positionEntityList.stream())
         .flatMap(el -> positionToActualValue(el, currency))
@@ -78,17 +83,22 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         .map(el -> new FinanceTotalDto(currency, el));
   }
 
-  private Mono<ValueDto> positionToActualValue(FinancePositionEntity position, Currency currency) {
-    Mono<PriceDto> priceDto = connectorFacade.getActualPrice(position.getIdentifier());
+  private Mono<ValueDto> positionToActualValue(FinancePositionEntity position, String currency) {
+    Mono<PriceDto> priceDto =
+        position.getType() == PositionType.CURRENCY
+            ? Mono.just(new PriceDto(position.getAmount()))
+            : connectorFacade.getActualPrice(position.getIdentifier());
     Mono<ValueDto> valueDto =
-        (position.getCurrency() == currency)
+        (position.getCurrency().equals(currency))
             ? priceDto.map(el -> new ValueDto(currency, el.getPrice()))
             : priceDto.flatMap(el -> this.exchangeToCurrency(el, position.getCurrency(), currency));
-    return valueDto.map(el -> new ValueDto(currency, el.getValue().multiply(position.getAmount())));
+    return position.getType() == PositionType.CURRENCY
+        ? valueDto
+        : valueDto.map(el -> new ValueDto(currency, el.getValue().multiply(position.getAmount())));
   }
 
   private Mono<ValueDto> exchangeToCurrency(
-      PriceDto priceDto, Currency fromCurrency, Currency toCurrency) {
+      PriceDto priceDto, String fromCurrency, String toCurrency) {
     return connectorFacade
         .convertToCurrency(fromCurrency, toCurrency)
         .map(exchangePriceDto -> priceDto.getPrice().multiply(exchangePriceDto.getPrice()))

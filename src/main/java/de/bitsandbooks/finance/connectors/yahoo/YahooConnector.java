@@ -9,7 +9,6 @@ import de.bitsandbooks.finance.connectors.yahoo.dto.Chart;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Meta;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Result;
 import de.bitsandbooks.finance.connectors.yahoo.dto.YahooChartDto;
-import de.bitsandbooks.finance.model.Currency;
 import de.bitsandbooks.finance.model.PriceDto;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -47,18 +46,17 @@ public class YahooConnector extends AbstractFinanceDataConnector
   }
 
   @Override
-  public Mono<PriceDto> convertToCurrency(Currency fromDto, Currency toDto) {
+  public Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency) {
     log.info(
         "Get actual currency price with '{}' API from currency '{}' to currency '{}'",
         this.getConnectorType(),
-        fromDto.getIdentifier(),
-        toDto.getIdentifier());
+        fromCurrency,
+        toCurrency);
     return yahooApi
-        .getCurrencyExchange(fromDto.getIdentifier(), toDto.getIdentifier())
+        .getCurrencyExchange(fromCurrency, toCurrency)
         .map(
             yahooChartDto ->
-                getRegularMarketPrice(
-                    fromDto.getIdentifier() + " -> " + toDto.getIdentifier(), yahooChartDto))
+                getRegularMarketPrice(fromCurrency + " -> " + toCurrency, yahooChartDto))
         .map(price -> new PriceDto(new BigDecimal(price)));
   }
 

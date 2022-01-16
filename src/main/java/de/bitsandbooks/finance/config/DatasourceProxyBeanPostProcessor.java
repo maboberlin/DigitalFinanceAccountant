@@ -1,5 +1,7 @@
 package de.bitsandbooks.finance.config;
 
+import java.lang.reflect.Method;
+import javax.sql.DataSource;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -9,9 +11,6 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
-
-import javax.sql.DataSource;
-import java.lang.reflect.Method;
 
 @Component
 @Profile({"test", "dev"})
