@@ -14,6 +14,6 @@ public class ErrorMessage {
   private Integer status;
   private String error;
   private String message;
-  private String path;
   private String service;
+  // TODO add path
 }

@@ -33,7 +33,7 @@ public class FinancePositionEntity {
 
   @NotNull private BigDecimal amount;
 
-  @NotNull private Currency currency;
+  @NotNull private String currency;
 
   @NotNull private PositionType type;
 

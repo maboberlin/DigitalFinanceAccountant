@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ValueDto {
-  Currency currency;
+  String currency;
   BigDecimal value;
 
   public BigDecimal getValue() {

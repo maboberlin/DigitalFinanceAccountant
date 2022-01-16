@@ -1,7 +1,6 @@
 package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.FinanceDataControllerInterface;
-import de.bitsandbooks.finance.model.Currency;
 import de.bitsandbooks.finance.model.FinancePositionEntity;
 import de.bitsandbooks.finance.model.FinanceTotalDto;
 import de.bitsandbooks.finance.services.FinanceDataService;
@@ -34,9 +33,9 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
   )
   public Mono<FinanceTotalDto> getTotalAmount(
       @NotEmpty @PathVariable("userEMail") String userEMail,
-      @NotNull @RequestParam("currency") Currency currency) {
+      @NotNull @RequestParam("currency") String currency) {
     log.info("Calculating total amount for user '{}'", userEMail);
-    return financeDataService.getTotalAmount(userEMail, currency);
+    return financeDataService.getTotalAmount(userEMail, currency.toUpperCase());
   }
 
   @Override

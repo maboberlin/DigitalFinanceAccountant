@@ -8,6 +8,11 @@ import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageTimeSerie
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphavantageDto;
 import de.bitsandbooks.finance.exceptions.ApiException;
 import de.bitsandbooks.finance.exceptions.ConnectorException;
+import java.net.URI;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -16,12 +21,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Component
@@ -117,6 +117,7 @@ public class AlphaVantageApi extends AbstractApi {
                 return buildErrorMono(res, "Error with status code '%s'");
               }
             })
+        .publishOn(Schedulers.boundedElastic())
         .onErrorMap(e -> new ConnectorException(e.getMessage(), ConnectorType.ALPHA_VANTAGE, e))
         .<T>handle(
             (el, sink) -> {

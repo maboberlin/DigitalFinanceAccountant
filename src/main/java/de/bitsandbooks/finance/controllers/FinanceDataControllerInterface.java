@@ -1,6 +1,5 @@
 package de.bitsandbooks.finance.controllers;
 
-import de.bitsandbooks.finance.model.Currency;
 import de.bitsandbooks.finance.model.FinancePositionEntity;
 import de.bitsandbooks.finance.model.FinanceTotalDto;
 import java.util.List;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
 
 public interface FinanceDataControllerInterface {
-  Mono<FinanceTotalDto> getTotalAmount(@NotEmpty String userId, @NotNull Currency currency);
+  Mono<FinanceTotalDto> getTotalAmount(@NotEmpty String userId, @NotNull String currency);
 
   List<FinancePositionEntity> getAllPositions(@NotEmpty String userId);
 
