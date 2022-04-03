@@ -14,7 +14,7 @@ public class FinanceConnectorSearcher {
 
   @NonNull private final List<FinanceDataConnector> connectorList;
 
-  @Cacheable(CacheConfiguration.CONNECTOR_CACHE)
+  @Cacheable(value = CacheConfiguration.CONNECTOR_CACHE, unless = "#result == null")
   public FinanceDataConnector findConnector(String identifier) {
     for (FinanceDataConnector financeDataConnector : connectorList) {
       if (financeDataConnector.hasPositionDataForLastDailyClosingPrice(identifier)) {

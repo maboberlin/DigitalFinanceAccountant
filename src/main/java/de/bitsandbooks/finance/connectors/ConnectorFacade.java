@@ -23,7 +23,7 @@ public class ConnectorFacade {
   @NonNull private final FinanceConnectorSearcher financeConnectorSearcher;
 
   @SneakyThrows
-  @Cacheable(CacheConfiguration.QUOTE_CACHE)
+  @Cacheable(value = CacheConfiguration.QUOTE_CACHE, unless = "#result == null")
   public Mono<PriceDto> getActualPrice(String identifier) {
     CompletableFuture<FinanceDataConnector> connector =
         CompletableFuture.supplyAsync(
@@ -33,12 +33,12 @@ public class ConnectorFacade {
                         () ->
                             new IllegalStateException(
                                 "No connector found for finance data position: " + identifier)));
-    return connector.get(1l, TimeUnit.MINUTES).getActualPrice(identifier);
+    return connector.get(1l, TimeUnit.MINUTES).getActualPrice(identifier).cache();
   }
 
-  @Cacheable(CacheConfiguration.CURRENCY_EXCHANGE_CACHE)
+  @Cacheable(value = CacheConfiguration.CURRENCY_EXCHANGE_CACHE, unless = "#result == null")
   public Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency) {
     ForexService forexService = forexServiceSearcher.getBestForexService();
-    return forexService.convertToCurrency(fromCurrency, toCurrency);
+    return forexService.convertToCurrency(fromCurrency, toCurrency).cache();
   }
 }

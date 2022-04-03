@@ -3,6 +3,8 @@ package de.bitsandbooks.finance.connectors.alphavantage.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,14 +13,14 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AlphaVantageTimeSeriesDailyAdjustedDto implements AlphavantageDto {
 
-  // TODO validate pojo
-
   @JsonProperty("Error Message")
   private String errorMessage;
 
+  @NotNull
   @JsonProperty("Meta Data")
   private MetaData metaData;
 
+  @NotNull
   @JsonProperty("Time Series (Daily)")
   private Map<String, DailyData> dailyDataMap;
 
@@ -53,6 +55,7 @@ public class AlphaVantageTimeSeriesDailyAdjustedDto implements AlphavantageDto {
     @JsonProperty("3. low")
     public String _3Low;
 
+    @NotEmpty
     @JsonProperty("4. close")
     public String _4Close;
 

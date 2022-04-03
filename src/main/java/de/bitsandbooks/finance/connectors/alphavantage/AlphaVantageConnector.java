@@ -39,7 +39,7 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
         "Get actual quote price with '{}' API for identifier: {}",
         this.getConnectorType(),
         identifier);
-    return getLastDailyPriceFromDailyAdjusted(identifier);
+    return getLastDailyPriceFromQuote(identifier);
   }
 
   private Mono<PriceDto> getLastDailyPriceFromQuote(String identifier) {

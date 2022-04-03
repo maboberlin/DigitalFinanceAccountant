@@ -1,8 +1,9 @@
 package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.UserControllerInterface;
-import de.bitsandbooks.finance.model.UserEntity;
+import de.bitsandbooks.finance.model.UserAccountEntity;
 import de.bitsandbooks.finance.services.UserService;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import lombok.NonNull;
@@ -24,16 +25,36 @@ public class UserControllerImpl implements UserControllerInterface {
   @Override
   @RequestMapping(value = "", method = RequestMethod.POST, produces = "application/json")
   @ResponseStatus(HttpStatus.CREATED)
-  public Void createUser(@Valid @RequestBody UserEntity userEntity) {
+  public UserAccountEntity createUser(@Valid @RequestBody UserAccountEntity userAccountEntity) {
     log.info("Creating user");
-    userService.createUser(userEntity);
-    return null;
+    return userService.createUser(userAccountEntity);
   }
 
   @Override
-  @RequestMapping(value = "/{userEMail}", method = RequestMethod.GET, produces = "application/json")
-  public UserEntity getUser(@NotEmpty @PathVariable("userEMail") String userEMail) {
-    log.info("Find user with id '{}'", userEMail);
-    return userService.getUser(userEMail);
+  @RequestMapping(
+    value = "/{userExternalIdentifier}",
+    method = RequestMethod.GET,
+    produces = "application/json"
+  )
+  public UserAccountEntity getUser(
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
+    log.info("Find user with userExternalIdentifier '{}'", userExternalIdentifier);
+    return userService.getUser(userExternalIdentifier);
+  }
+
+  @Override
+  @RequestMapping(value = "", method = RequestMethod.GET, produces = "application/json")
+  public List<UserAccountEntity> getAllUsers() {
+    log.info("Get all users");
+    return userService.getAllUsers();
+  }
+
+  @Override
+  @RequestMapping(value = "/find", method = RequestMethod.GET, produces = "application/json")
+  public UserAccountEntity findUser(
+      @NotEmpty @RequestParam("eMail") String eMail,
+      @NotEmpty @RequestParam("accountIdentifier") String accountIdentifier) {
+    log.info("Find user with eMail '{}' and accountIdentifier '{}'", eMail, accountIdentifier);
+    return userService.getUser(eMail, accountIdentifier);
   }
 }

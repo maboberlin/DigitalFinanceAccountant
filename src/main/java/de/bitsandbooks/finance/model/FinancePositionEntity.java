@@ -39,5 +39,5 @@ public class FinancePositionEntity {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  private UserEntity user;
+  private UserAccountEntity user;
 }

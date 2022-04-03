@@ -27,56 +27,58 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
 
   @Override
   @RequestMapping(
-    value = "/total/{userEMail}",
+    value = "/total/{userExternalIdentifier}",
     method = RequestMethod.GET,
     produces = "application/json"
   )
   public Mono<FinanceTotalDto> getTotalAmount(
-      @NotEmpty @PathVariable("userEMail") String userEMail,
-      @NotNull @RequestParam("currency") String currency) {
-    log.info("Calculating total amount for user '{}'", userEMail);
-    return financeDataService.getTotalAmount(userEMail, currency.toUpperCase());
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier,
+      @NotNull @RequestParam("currency") String currency,
+      @RequestParam("byType") Boolean byType) {
+    log.info("Calculating total amount for user '{}'", userExternalIdentifier);
+    return financeDataService.getTotalAmount(
+        userExternalIdentifier, currency.toUpperCase(), byType);
   }
 
   @Override
   @RequestMapping(
-    value = "/positions/{userEMail}",
+    value = "/positions/{userExternalIdentifier}",
     method = RequestMethod.GET,
     produces = "application/json"
   )
   public List<FinancePositionEntity> getAllPositions(
-      @NotEmpty @PathVariable("userEMail") String userEMail) {
-    log.info("Getting all positions for user '{}'", userEMail);
-    return financeDataService.getAllPositions(userEMail);
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
+    log.info("Getting all positions for user '{}'", userExternalIdentifier);
+    return financeDataService.getAllPositions(userExternalIdentifier);
   }
 
   @Override
   @RequestMapping(
-    value = "/positions/{userEMail}",
+    value = "/positions/{userExternalIdentifier}",
     method = RequestMethod.POST,
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
   public Void addPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty @PathVariable("userEMail") String userEMail) {
-    log.info("Add positions for user '{}'", userEMail);
-    financeDataService.addPositions(financePositionEntityList, userEMail);
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
+    log.info("Add positions for user '{}'", userExternalIdentifier);
+    financeDataService.addPositions(financePositionEntityList, userExternalIdentifier);
     return null;
   }
 
   @Override
   @RequestMapping(
-    value = "/positions/{userEMail}",
+    value = "/positions/{userExternalIdentifier}",
     method = RequestMethod.PUT,
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
   public Void putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty @PathVariable("userEMail") String userEMail) {
-    log.info("Put positions for user '{}'", userEMail);
-    financeDataService.putPositions(financePositionEntityList, userEMail);
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
+    log.info("Put positions for user '{}'", userExternalIdentifier);
+    financeDataService.putPositions(financePositionEntityList, userExternalIdentifier);
     return null;
   }
 }

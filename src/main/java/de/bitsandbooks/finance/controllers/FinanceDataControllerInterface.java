@@ -10,15 +10,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
 
 public interface FinanceDataControllerInterface {
-  Mono<FinanceTotalDto> getTotalAmount(@NotEmpty String userId, @NotNull String currency);
+  Mono<FinanceTotalDto> getTotalAmount(
+      @NotEmpty String userExternalIdentifier, @NotNull String currency, Boolean byType);
 
-  List<FinancePositionEntity> getAllPositions(@NotEmpty String userId);
+  List<FinancePositionEntity> getAllPositions(@NotEmpty String userExternalIdentifier);
 
   Void addPositions(
       @Valid @NotEmpty List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty String userEmail);
+      @NotEmpty String userExternalIdentifier);
 
   Void putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty String userEmail);
+      @NotEmpty String userExternalIdentifier);
 }

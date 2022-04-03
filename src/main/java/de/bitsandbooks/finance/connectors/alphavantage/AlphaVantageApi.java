@@ -12,7 +12,10 @@ import java.net.URI;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -43,15 +46,18 @@ public class AlphaVantageApi extends AbstractApi {
   private final String apiToken;
   private final WebClient alphavantageWebClient;
   private final AlphaVantageRequestDelayService alphaVantageRequestDelayService;
+  private final Validator validator;
 
   public AlphaVantageApi(
       @Value("${dfa.alphavantage.base-url}") String baseUrl,
       @Value("${dfa.alphavantage.api-token}") String apiToken,
       @Value("${dfa.request.timeout.ms}") Integer requestTimeOutMillis,
-      AlphaVantageRequestDelayService alphaVantageRequestDelayService) {
+      AlphaVantageRequestDelayService alphaVantageRequestDelayService,
+      Validator validator) {
     this.alphavantageWebClient = super.initiateDefaultWebClient(baseUrl, requestTimeOutMillis);
     this.apiToken = apiToken;
     this.alphaVantageRequestDelayService = alphaVantageRequestDelayService;
+    this.validator = validator;
   }
 
   public Mono<AlphaVantageTimeSeriesDailyAdjustedDto> getTimeSeriesDailyAdjusted(String identifier)
@@ -131,8 +137,16 @@ public class AlphaVantageApi extends AbstractApi {
                 sink.next(el);
               }
             })
+        .doOnNext(this::validate)
         .doOnTerminate(alphaVantageRequestDelayService::resetTimer)
         .delaySubscription(Duration.ofMillis(alphaVantageRequestDelayService.getDelayRequests()));
+  }
+
+  private <T extends AlphavantageDto> void validate(T obj) {
+    Set<ConstraintViolation<T>> violations = this.validator.validate(obj);
+    if (violations.size() > 0) {
+      throw new IllegalArgumentException(violations.toString());
+    }
   }
 
   private <T extends AlphavantageDto> Mono<T> buildErrorMono(

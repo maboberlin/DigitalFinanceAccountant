@@ -6,7 +6,7 @@ import java.util.List;
 import reactor.core.publisher.Mono;
 
 public interface FinanceDataService {
-  Mono<FinanceTotalDto> getTotalAmount(String userId, String currency);
+  Mono<FinanceTotalDto> getTotalAmount(String userId, String currency, Boolean byType);
 
   List<FinancePositionEntity> getAllPositions(String userId);
 
