@@ -1,14 +1,18 @@
 <template>
-  <HelloWorld />
+  <h1>Digital Finance Accountant</h1>
+  <AssetsTotal />
+  <AssetsList />
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import AssetsTotal from './components/AssetsTotal.vue'
+import AssetsList from './components/AssetsList.vue'
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
+    AssetsTotal,
+    AssetsList
   }
 }
 </script>
