@@ -77,7 +77,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
             () ->
                 new EntityNotFoundException(
                     UserAccountEntity.class.getName(),
-                    String.format("Could not find user with eMail '%s'", externalIdentifier)));
+                    String.format(
+                        "Could not find user with externalIdentifier '%s'", externalIdentifier)));
   }
 
   private Mono<FinanceTotalDto> getFinanceTotalDtoInternal(

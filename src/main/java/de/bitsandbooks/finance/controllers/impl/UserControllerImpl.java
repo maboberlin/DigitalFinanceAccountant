@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("user")
+@RequestMapping("api/user")
 @RestController
 public class UserControllerImpl implements UserControllerInterface {
 

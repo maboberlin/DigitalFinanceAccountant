@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("finance")
+@RequestMapping("api/finance")
 @RestController
 public class FinanceDataControllerImpl implements FinanceDataControllerInterface {
 
