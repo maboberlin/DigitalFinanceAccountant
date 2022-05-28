@@ -7,10 +7,8 @@ import de.bitsandbooks.finance.repositories.FinancePositionRepository;
 import de.bitsandbooks.finance.repositories.UserAccountRepository;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -47,6 +45,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
+          entity.setExternalIdentifier(UUID.randomUUID().toString());
           entity.setUser(userAccountEntity);
           userAccountEntity.getFinancePositionEntityList().add(entity);
           entity.setCurrency(entity.getCurrency().toUpperCase());
@@ -61,6 +60,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
+          entity.setExternalIdentifier(UUID.randomUUID().toString());
           entity.setUser(userAccountEntity);
           entity.setCurrency(entity.getCurrency().toUpperCase());
         });

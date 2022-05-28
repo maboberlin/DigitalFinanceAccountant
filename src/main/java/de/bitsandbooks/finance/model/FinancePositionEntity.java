@@ -27,6 +27,8 @@ public class FinancePositionEntity {
   )
   private String id;
 
+  private String externalIdentifier;
+
   @NotEmpty private String identifier;
 
   @NotEmpty private String name;
