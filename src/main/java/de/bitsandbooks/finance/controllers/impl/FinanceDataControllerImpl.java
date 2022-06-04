@@ -59,12 +59,13 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
-  public Void addPositions(
+  public List<FinancePositionEntity> addPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
     log.info("Add positions for user '{}'", userExternalIdentifier);
-    financeDataService.addPositions(financePositionEntityList, userExternalIdentifier);
-    return null;
+    List<FinancePositionEntity> positionEntityList =
+        financeDataService.addPositions(financePositionEntityList, userExternalIdentifier);
+    return positionEntityList;
   }
 
   @Override
@@ -74,11 +75,28 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
-  public Void putPositions(
+  public List<FinancePositionEntity> putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
     log.info("Put positions for user '{}'", userExternalIdentifier);
-    financeDataService.putPositions(financePositionEntityList, userExternalIdentifier);
+    List<FinancePositionEntity> positionEntityList =
+        financeDataService.putPositions(financePositionEntityList, userExternalIdentifier);
+    return positionEntityList;
+  }
+
+  @Override
+  @RequestMapping(
+    value = "/positions/{userExternalIdentifier}/{positionExternalIdentifier}",
+    method = RequestMethod.DELETE,
+    produces = "application/json"
+  )
+  @ResponseStatus(HttpStatus.OK)
+  public Void deletePosition(
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier,
+      @NotEmpty @PathVariable("positionExternalIdentifier") String positionExternalIdentifier) {
+    log.info(
+        "Delete position '{}' for user '{}'", positionExternalIdentifier, userExternalIdentifier);
+    financeDataService.deletePosition(userExternalIdentifier, positionExternalIdentifier);
     return null;
   }
 }

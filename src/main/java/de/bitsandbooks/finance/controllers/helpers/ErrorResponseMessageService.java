@@ -3,6 +3,7 @@ package de.bitsandbooks.finance.controllers.helpers;
 import de.bitsandbooks.finance.exceptions.ConnectorException;
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
 import de.bitsandbooks.finance.exceptions.MoreThanOneEntityFoundException;
+import de.bitsandbooks.finance.exceptions.PositionsNotExistingException;
 import de.bitsandbooks.finance.model.ErrorMessage;
 import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,17 @@ public class ErrorResponseMessageService {
             ex.getConnectorType(), ex.getMessage());
     log.error(msg, ex);
     return buildErrorResponse(msg, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
+
+  @ExceptionHandler(PositionsNotExistingException.class)
+  public ResponseEntity<ErrorMessage> handlePositionsNotExistingException(
+      PositionsNotExistingException ex) {
+    String msg =
+        String.format(
+            "Exception occurred because of position could not be found by any connector: %s",
+            ex.getMessage());
+    log.error(msg, ex);
+    return buildErrorResponse(msg, HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

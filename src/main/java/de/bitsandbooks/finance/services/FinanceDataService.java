@@ -10,7 +10,11 @@ public interface FinanceDataService {
 
   List<FinancePositionEntity> getAllPositions(String userId);
 
-  void addPositions(List<FinancePositionEntity> positionDtoList, String userId);
+  List<FinancePositionEntity> addPositions(
+      List<FinancePositionEntity> positionDtoList, String userId);
 
-  void putPositions(List<FinancePositionEntity> positionDtoList, String userId);
+  List<FinancePositionEntity> putPositions(
+      List<FinancePositionEntity> positionDtoList, String userId);
+
+  void deletePosition(String userExternalIdentifier, String positionExternalIdentifier);
 }

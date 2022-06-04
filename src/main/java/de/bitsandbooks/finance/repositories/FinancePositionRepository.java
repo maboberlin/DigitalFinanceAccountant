@@ -8,4 +8,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface FinancePositionRepository
     extends PagingAndSortingRepository<FinancePositionEntity, String> {
   List<FinancePositionEntity> findByUser(UserAccountEntity userAccountEntity);
+
+  Long deleteByExternalIdentifier(String externalIdentifier);
 }

@@ -8,13 +8,16 @@ import de.bitsandbooks.finance.repositories.UserAccountRepository;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.math.BigDecimal;
 import java.util.*;
-
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.IteratorUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class FinanceDataServiceImpl implements FinanceDataService {
@@ -25,6 +28,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
 
   @NonNull private final UserAccountRepository userAccountRepository;
 
+  @Transactional(readOnly = true)
   @Override
   public Mono<FinanceTotalDto> getTotalAmount(
       String externalIdentifier, String currency, Boolean byType) {
@@ -33,15 +37,18 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         : getFinanceTotalDtoInternal(externalIdentifier, currency);
   }
 
+  @Transactional(readOnly = true)
   @Override
   public List<FinancePositionEntity> getAllPositions(String externalIdentifier) {
     UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
     return financePositionRepository.findByUser(userAccountEntity);
   }
 
+  @Transactional
   @Override
-  public void addPositions(
+  public List<FinancePositionEntity> addPositions(
       List<FinancePositionEntity> financePositionEntityList, String externalIdentifier) {
+    checkPositionsExist(financePositionEntityList);
     UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
@@ -50,13 +57,17 @@ public class FinanceDataServiceImpl implements FinanceDataService {
           userAccountEntity.getFinancePositionEntityList().add(entity);
           entity.setCurrency(entity.getCurrency().toUpperCase());
         });
-    financePositionRepository.saveAll(financePositionEntityList);
+    Iterable<FinancePositionEntity> financePositionEntities =
+        financePositionRepository.saveAll(financePositionEntityList);
     userAccountRepository.save(userAccountEntity);
+    return IteratorUtils.toList(financePositionEntities.iterator());
   }
 
+  @Transactional
   @Override
-  public void putPositions(
+  public List<FinancePositionEntity> putPositions(
       List<FinancePositionEntity> financePositionEntityList, String externalIdentifier) {
+    checkPositionsExist(financePositionEntityList);
     UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
@@ -66,8 +77,28 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         });
     userAccountEntity.getFinancePositionEntityList().clear();
     userAccountEntity.getFinancePositionEntityList().addAll(financePositionEntityList);
-    financePositionRepository.saveAll(financePositionEntityList);
+    Iterable<FinancePositionEntity> financePositionEntities =
+        financePositionRepository.saveAll(financePositionEntityList);
     userAccountRepository.save(userAccountEntity);
+    return IteratorUtils.toList(financePositionEntities.iterator());
+  }
+
+  @Transactional
+  @Override
+  public void deletePosition(String userExternalIdentifier, String positionExternalIdentifier) {
+    Long aLong = financePositionRepository.deleteByExternalIdentifier(positionExternalIdentifier);
+    if (aLong == 0) {
+      log.warn(
+          "FinancePositionEntity with externalIdentifier '{}' could not be found and though not be deleted.",
+          positionExternalIdentifier);
+    }
+  }
+
+  private void checkPositionsExist(List<FinancePositionEntity> financePositionEntityList) {
+    financePositionEntityList
+        .stream()
+        .map(FinancePositionEntity::getIdentifier)
+        .forEach(connectorFacade::checkPositionExists);
   }
 
   private UserAccountEntity getUserEntity(String externalIdentifier) {

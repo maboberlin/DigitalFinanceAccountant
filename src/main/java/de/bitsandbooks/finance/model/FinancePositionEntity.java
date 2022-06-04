@@ -16,6 +16,11 @@ import org.hibernate.annotations.GenericGenerator;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(
+  indexes = {
+    @Index(name = "external_identifier_index", columnList = "externalIdentifier", unique = true)
+  }
+)
 public class FinancePositionEntity {
 
   @JsonIgnore

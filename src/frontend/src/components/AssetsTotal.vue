@@ -1,6 +1,7 @@
 <template>
     <div>
-        <h2>TOTAL</h2>
+        <hr>
+        <h2>Total</h2>
         <p>{{ total.value }}</p>
     </div>
 </template>

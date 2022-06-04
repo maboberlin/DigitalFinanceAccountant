@@ -15,11 +15,14 @@ public interface FinanceDataControllerInterface {
 
   List<FinancePositionEntity> getAllPositions(@NotEmpty String userExternalIdentifier);
 
-  Void addPositions(
+  List<FinancePositionEntity> addPositions(
       @Valid @NotEmpty List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty String userExternalIdentifier);
 
-  Void putPositions(
+  List<FinancePositionEntity> putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty String userExternalIdentifier);
+
+  Void deletePosition(
+      @NotEmpty String userExternalIdentifier, @NotEmpty String positionExternalIdentifier);
 }
