@@ -3,7 +3,7 @@ import axios from "axios";
 
 export default createStore({
   state: {
-    defaultAccount: "2aea93a8-e00e-4ef1-9e83-a6e1674615aa",
+    defaultAccount: "c848566e-438b-40a1-90ea-0d052fca323a",
     total: {},
     positions: []
   },

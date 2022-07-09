@@ -42,8 +42,7 @@
 export default {
   data() {
     return {
-        tableHeaders: ['Symbol','Name','Amount','Currency','Type'],
-        currencies: ['USD', 'EUR']
+        tableHeaders: ['Symbol','Name','Amount','Currency','Type']
     }
   },
   name: 'AssetsTable',
