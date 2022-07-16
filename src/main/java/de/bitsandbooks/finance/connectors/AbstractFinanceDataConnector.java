@@ -1,6 +1,6 @@
 package de.bitsandbooks.finance.connectors;
 
-import de.bitsandbooks.finance.model.PriceDto;
+import de.bitsandbooks.finance.model.dtos.PriceDto;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

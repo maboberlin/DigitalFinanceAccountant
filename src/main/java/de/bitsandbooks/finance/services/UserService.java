@@ -1,14 +1,20 @@
 package de.bitsandbooks.finance.services;
 
-import de.bitsandbooks.finance.model.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserEntity;
 import java.util.List;
 
 public interface UserService {
-  UserAccountEntity createUser(UserAccountEntity userAccountEntity);
+  UserAccountEntity createUserAccount(
+      String userExternalIdentifier, UserAccountEntity userAccountEntity);
 
-  UserAccountEntity getUser(String userExternalIdentifier);
+  UserEntity getUserByExternalIdentifier(String userExternalIdentifier);
 
-  List<UserAccountEntity> getAllUsers();
+  UserEntity getUserByEmailAddress(String emailAddress);
 
-  UserAccountEntity getUser(String eMail, String accountIdentifier);
+  List<UserEntity> getAllUsers();
+
+  UserEntity getUser(String eMail, String accountIdentifier);
+
+  UserEntity createUser(UserEntity userEntity);
 }

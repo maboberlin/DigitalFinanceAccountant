@@ -1,7 +1,7 @@
 package de.bitsandbooks.finance.services;
 
-import de.bitsandbooks.finance.model.FinancePositionEntity;
-import de.bitsandbooks.finance.model.FinanceTotalDto;
+import de.bitsandbooks.finance.model.dtos.FinanceTotalDto;
+import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
 import java.util.List;
 import reactor.core.publisher.Mono;
 

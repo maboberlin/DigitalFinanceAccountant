@@ -4,7 +4,7 @@ import de.bitsandbooks.finance.config.CacheConfiguration;
 import de.bitsandbooks.finance.connectors.helpers.FinanceConnectorSearcher;
 import de.bitsandbooks.finance.connectors.helpers.ForexServiceSearcher;
 import de.bitsandbooks.finance.exceptions.PositionsNotExistingException;
-import de.bitsandbooks.finance.model.PriceDto;
+import de.bitsandbooks.finance.model.dtos.PriceDto;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;

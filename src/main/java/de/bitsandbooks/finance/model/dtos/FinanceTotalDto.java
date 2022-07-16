@@ -1,4 +1,4 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.math.BigDecimal;

@@ -1,6 +1,7 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import de.bitsandbooks.finance.model.dtos.PositionType;
 import java.math.BigDecimal;
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
@@ -46,5 +47,5 @@ public class FinancePositionEntity {
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
-  private UserAccountEntity user;
+  private UserAccountEntity userAccount;
 }

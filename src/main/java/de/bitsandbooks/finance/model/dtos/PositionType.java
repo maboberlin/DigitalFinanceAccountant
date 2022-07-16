@@ -1,4 +1,4 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.dtos;
 
 public enum PositionType {
   STOCK,

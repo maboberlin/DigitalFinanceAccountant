@@ -8,7 +8,7 @@ import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageCurrencyD
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageQuoteDto;
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageTimeSeriesDailyAdjustedDto;
 import de.bitsandbooks.finance.connectors.helpers.RoundHelper;
-import de.bitsandbooks.finance.model.PriceDto;
+import de.bitsandbooks.finance.model.dtos.PriceDto;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Map;

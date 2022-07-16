@@ -1,8 +1,10 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -18,11 +20,11 @@ import org.hibernate.annotations.GenericGenerator;
 @EqualsAndHashCode
 @Table(
   uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"mailAddress", "accountIdentifier"}),
+    @UniqueConstraint(columnNames = {"mailAddress"}),
     @UniqueConstraint(columnNames = {"externalIdentifier"})
   }
 )
-public class UserAccountEntity {
+public class UserEntity {
 
   @JsonIgnore
   @Id
@@ -42,11 +44,18 @@ public class UserAccountEntity {
 
   @Email private String mailAddress;
 
-  @NotEmpty private String accountIdentifier;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  @NotEmpty
+  private String password;
+
+  @JsonIgnore
+  @ElementCollection
+  @Enumerated(EnumType.STRING)
+  private Set<Role> roles;
 
   @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<FinancePositionEntity> financePositionEntityList = new ArrayList<>();
+  private List<UserAccountEntity> userAccountEntityList = new ArrayList<>();
 
   @PrePersist
   private void setExternalIdentifier() {

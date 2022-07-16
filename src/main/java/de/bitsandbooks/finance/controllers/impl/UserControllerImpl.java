@@ -1,7 +1,8 @@
 package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.UserControllerInterface;
-import de.bitsandbooks.finance.model.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserEntity;
 import de.bitsandbooks.finance.services.UserService;
 import java.util.List;
 import javax.validation.Valid;
@@ -23,11 +24,17 @@ public class UserControllerImpl implements UserControllerInterface {
   @NonNull private final UserService userService;
 
   @Override
-  @RequestMapping(value = "", method = RequestMethod.POST, produces = "application/json")
+  @RequestMapping(
+    value = "/{userIdentifier}/account",
+    method = RequestMethod.POST,
+    produces = "application/json"
+  )
   @ResponseStatus(HttpStatus.CREATED)
-  public UserAccountEntity createUser(@Valid @RequestBody UserAccountEntity userAccountEntity) {
-    log.info("Creating user");
-    return userService.createUser(userAccountEntity);
+  public UserAccountEntity createUserAccount(
+      @NotEmpty @PathVariable(name = "userIdentifier") String userExternalIdentifier,
+      @Valid @RequestBody UserAccountEntity userAccountEntity) {
+    log.info("Creating user account");
+    return userService.createUserAccount(userExternalIdentifier, userAccountEntity);
   }
 
   @Override
@@ -36,22 +43,22 @@ public class UserControllerImpl implements UserControllerInterface {
     method = RequestMethod.GET,
     produces = "application/json"
   )
-  public UserAccountEntity getUser(
+  public UserEntity getUser(
       @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
     log.info("Find user with userExternalIdentifier '{}'", userExternalIdentifier);
-    return userService.getUser(userExternalIdentifier);
+    return userService.getUserByExternalIdentifier(userExternalIdentifier);
   }
 
   @Override
   @RequestMapping(value = "", method = RequestMethod.GET, produces = "application/json")
-  public List<UserAccountEntity> getAllUsers() {
+  public List<UserEntity> getAllUsers() {
     log.info("Get all users");
     return userService.getAllUsers();
   }
 
   @Override
   @RequestMapping(value = "/find", method = RequestMethod.GET, produces = "application/json")
-  public UserAccountEntity findUser(
+  public UserEntity findUser(
       @NotEmpty @RequestParam("eMail") String eMail,
       @NotEmpty @RequestParam("accountIdentifier") String accountIdentifier) {
     log.info("Find user with eMail '{}' and accountIdentifier '{}'", eMail, accountIdentifier);

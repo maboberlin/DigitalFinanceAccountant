@@ -1,4 +1,4 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.dtos;
 
 import de.bitsandbooks.finance.connectors.helpers.RoundHelper;
 import java.math.BigDecimal;

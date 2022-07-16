@@ -1,4 +1,4 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.dtos;
 
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;

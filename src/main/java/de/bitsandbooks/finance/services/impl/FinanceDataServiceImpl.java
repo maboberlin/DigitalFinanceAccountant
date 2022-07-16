@@ -2,9 +2,12 @@ package de.bitsandbooks.finance.services.impl;
 
 import de.bitsandbooks.finance.connectors.ConnectorFacade;
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
-import de.bitsandbooks.finance.model.*;
+import de.bitsandbooks.finance.model.dtos.*;
+import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
+import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.repositories.FinancePositionRepository;
 import de.bitsandbooks.finance.repositories.UserAccountRepository;
+import de.bitsandbooks.finance.repositories.UserRepository;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.math.BigDecimal;
 import java.util.*;
@@ -26,6 +29,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
 
   @NonNull private final FinancePositionRepository financePositionRepository;
 
+  @NonNull private final UserRepository userRepository;
+
   @NonNull private final UserAccountRepository userAccountRepository;
 
   @Transactional(readOnly = true)
@@ -40,8 +45,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   @Transactional(readOnly = true)
   @Override
   public List<FinancePositionEntity> getAllPositions(String externalIdentifier) {
-    UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
-    return financePositionRepository.findByUser(userAccountEntity);
+    UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
+    return financePositionRepository.findByUserAccount(userAccountEntity);
   }
 
   @Transactional
@@ -49,11 +54,11 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   public List<FinancePositionEntity> addPositions(
       List<FinancePositionEntity> financePositionEntityList, String externalIdentifier) {
     checkPositionsExist(financePositionEntityList);
-    UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
+    UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
           entity.setExternalIdentifier(UUID.randomUUID().toString());
-          entity.setUser(userAccountEntity);
+          entity.setUserAccount(userAccountEntity);
           userAccountEntity.getFinancePositionEntityList().add(entity);
           entity.setCurrency(entity.getCurrency().toUpperCase());
         });
@@ -68,11 +73,11 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   public List<FinancePositionEntity> putPositions(
       List<FinancePositionEntity> financePositionEntityList, String externalIdentifier) {
     checkPositionsExist(financePositionEntityList);
-    UserAccountEntity userAccountEntity = getUserEntity(externalIdentifier);
+    UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
     financePositionEntityList.forEach(
         entity -> {
           entity.setExternalIdentifier(UUID.randomUUID().toString());
-          entity.setUser(userAccountEntity);
+          entity.setUserAccount(userAccountEntity);
           entity.setCurrency(entity.getCurrency().toUpperCase());
         });
     userAccountEntity.getFinancePositionEntityList().clear();
@@ -101,7 +106,7 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         .forEach(connectorFacade::checkPositionExists);
   }
 
-  private UserAccountEntity getUserEntity(String externalIdentifier) {
+  private UserAccountEntity getUserAccountEntity(String externalIdentifier) {
     return userAccountRepository
         .findByExternalIdentifier(externalIdentifier)
         .orElseThrow(

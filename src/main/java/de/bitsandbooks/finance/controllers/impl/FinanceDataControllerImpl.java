@@ -1,8 +1,8 @@
 package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.FinanceDataControllerInterface;
-import de.bitsandbooks.finance.model.FinancePositionEntity;
-import de.bitsandbooks.finance.model.FinanceTotalDto;
+import de.bitsandbooks.finance.model.dtos.FinanceTotalDto;
+import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.util.List;
 import javax.validation.Valid;

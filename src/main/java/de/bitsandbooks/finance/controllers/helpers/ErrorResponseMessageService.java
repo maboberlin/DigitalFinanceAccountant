@@ -4,7 +4,7 @@ import de.bitsandbooks.finance.exceptions.ConnectorException;
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
 import de.bitsandbooks.finance.exceptions.MoreThanOneEntityFoundException;
 import de.bitsandbooks.finance.exceptions.PositionsNotExistingException;
-import de.bitsandbooks.finance.model.ErrorMessage;
+import de.bitsandbooks.finance.model.dtos.ErrorMessageDto;
 import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +24,14 @@ public class ErrorResponseMessageService {
   private String appName;
 
   @ExceptionHandler(EntityNotFoundException.class)
-  public ResponseEntity<ErrorMessage> handleEntityNotFoundException(EntityNotFoundException ex) {
+  public ResponseEntity<ErrorMessageDto> handleEntityNotFoundException(EntityNotFoundException ex) {
     String msg = String.format("%s not found. %s", ex.getTypeName(), ex.getMessage());
     log.error(msg, ex);
     return buildErrorResponse(msg, HttpStatus.NOT_FOUND);
   }
 
   @ExceptionHandler(MoreThanOneEntityFoundException.class)
-  public ResponseEntity<ErrorMessage> handleMoreThanOneEntityFoundException(
+  public ResponseEntity<ErrorMessageDto> handleMoreThanOneEntityFoundException(
       MoreThanOneEntityFoundException ex) {
     String msg = String.format("%s more than one found. %s", ex.getTypeName(), ex.getMessage());
     log.error(msg, ex);
@@ -39,7 +39,7 @@ public class ErrorResponseMessageService {
   }
 
   @ExceptionHandler(ConnectorException.class)
-  public ResponseEntity<ErrorMessage> handleConnectorException(ConnectorException ex) {
+  public ResponseEntity<ErrorMessageDto> handleConnectorException(ConnectorException ex) {
     String msg =
         String.format(
             "Exception occurred while connecting to external source with connector '%s': %s",
@@ -49,7 +49,7 @@ public class ErrorResponseMessageService {
   }
 
   @ExceptionHandler(PositionsNotExistingException.class)
-  public ResponseEntity<ErrorMessage> handlePositionsNotExistingException(
+  public ResponseEntity<ErrorMessageDto> handlePositionsNotExistingException(
       PositionsNotExistingException ex) {
     String msg =
         String.format(
@@ -61,21 +61,21 @@ public class ErrorResponseMessageService {
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
-    ResponseEntity<ErrorMessage> errorMessageResponseEntity =
+    ResponseEntity<ErrorMessageDto> errorMessageResponseEntity =
         buildErrorResponse(ex.getLocalizedMessage(), HttpStatus.BAD_REQUEST);
     return new ResponseEntity<>(errorMessageResponseEntity.getBody(), HttpStatus.BAD_REQUEST);
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<ErrorMessage> handleGeneralException(Exception ex) {
+  public ResponseEntity<ErrorMessageDto> handleGeneralException(Exception ex) {
     String msg = ex.getMessage();
     log.error(msg, ex);
     return buildErrorResponse(msg, HttpStatus.INTERNAL_SERVER_ERROR);
   }
 
-  private ResponseEntity<ErrorMessage> buildErrorResponse(String msg, HttpStatus status) {
-    ErrorMessage errorMessage =
-        ErrorMessage.builder()
+  private ResponseEntity<ErrorMessageDto> buildErrorResponse(String msg, HttpStatus status) {
+    ErrorMessageDto errorMessage =
+        ErrorMessageDto.builder()
             .error(status.getReasonPhrase())
             .message(msg)
             .status(status.value())

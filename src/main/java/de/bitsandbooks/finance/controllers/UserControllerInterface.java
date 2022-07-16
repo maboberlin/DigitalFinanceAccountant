@@ -1,16 +1,18 @@
 package de.bitsandbooks.finance.controllers;
 
-import de.bitsandbooks.finance.model.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserAccountEntity;
+import de.bitsandbooks.finance.model.entities.UserEntity;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 
 public interface UserControllerInterface {
-  UserAccountEntity createUser(@Valid UserAccountEntity userAccountEntity);
+  UserAccountEntity createUserAccount(
+      @NotEmpty String userExternalIdentifier, @Valid UserAccountEntity userEntity);
 
-  UserAccountEntity getUser(@NotEmpty String userExternalIdentifier);
+  UserEntity getUser(@NotEmpty String userExternalIdentifier);
 
-  List<UserAccountEntity> getAllUsers();
+  List<UserEntity> getAllUsers();
 
-  UserAccountEntity findUser(@NotEmpty String eMail, @NotEmpty String accountIdentifier);
+  UserEntity findUser(@NotEmpty String eMail, @NotEmpty String accountIdentifier);
 }

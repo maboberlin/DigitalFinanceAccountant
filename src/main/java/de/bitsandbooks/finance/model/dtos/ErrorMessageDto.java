@@ -1,4 +1,4 @@
-package de.bitsandbooks.finance.model;
+package de.bitsandbooks.finance.model.dtos;
 
 import java.time.OffsetDateTime;
 import lombok.*;
@@ -9,7 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ErrorMessage {
+public class ErrorMessageDto {
   private OffsetDateTime timestamp;
   private Integer status;
   private String error;

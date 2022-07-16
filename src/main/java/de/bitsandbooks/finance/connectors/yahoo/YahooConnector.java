@@ -9,7 +9,7 @@ import de.bitsandbooks.finance.connectors.yahoo.dto.Chart;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Meta;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Result;
 import de.bitsandbooks.finance.connectors.yahoo.dto.YahooChartDto;
-import de.bitsandbooks.finance.model.PriceDto;
+import de.bitsandbooks.finance.model.dtos.PriceDto;
 import java.math.BigDecimal;
 import java.util.Optional;
 import lombok.NonNull;
