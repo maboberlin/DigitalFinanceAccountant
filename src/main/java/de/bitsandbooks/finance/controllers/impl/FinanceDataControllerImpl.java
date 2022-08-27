@@ -1,5 +1,8 @@
 package de.bitsandbooks.finance.controllers.impl;
 
+import static reactor.core.publisher.Flux.fromIterable;
+import static reactor.core.publisher.Mono.empty;
+
 import de.bitsandbooks.finance.controllers.FinanceDataControllerInterface;
 import de.bitsandbooks.finance.model.dtos.FinanceTotalDto;
 import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
@@ -12,8 +15,10 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -26,77 +31,92 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
   @NonNull private final FinanceDataService financeDataService;
 
   @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'read')")
   @RequestMapping(
-    value = "/total/{userExternalIdentifier}",
+    value = "/total/{userAccountExternalIdentifier}",
     method = RequestMethod.GET,
     produces = "application/json"
   )
   public Mono<FinanceTotalDto> getTotalAmount(
-      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier,
+      @NotEmpty @PathVariable("userAccountExternalIdentifier") String userAccountExternalIdentifier,
       @NotNull @RequestParam("currency") String currency,
       @RequestParam("byType") Boolean byType) {
-    log.info("Calculating total amount for user '{}'", userExternalIdentifier);
+    log.info("Calculating total amount for user '{}'", userAccountExternalIdentifier);
     return financeDataService.getTotalAmount(
-        userExternalIdentifier, currency.toUpperCase(), byType);
+        userAccountExternalIdentifier, currency.toUpperCase(), byType);
   }
 
   @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'read')")
   @RequestMapping(
-    value = "/positions/{userExternalIdentifier}",
+    value = "/positions/{userAccountExternalIdentifier}",
     method = RequestMethod.GET,
     produces = "application/json"
   )
-  public List<FinancePositionEntity> getAllPositions(
-      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
-    log.info("Getting all positions for user '{}'", userExternalIdentifier);
-    return financeDataService.getAllPositions(userExternalIdentifier);
+  public Flux<FinancePositionEntity> getAllPositions(
+      @NotEmpty @PathVariable("userAccountExternalIdentifier")
+          String userAccountExternalIdentifier) {
+    log.info("Getting all positions for user '{}'", userAccountExternalIdentifier);
+    return fromIterable(financeDataService.getAllPositions(userAccountExternalIdentifier));
   }
 
   @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'write')")
   @RequestMapping(
-    value = "/positions/{userExternalIdentifier}",
+    value = "/positions/{userAccountExternalIdentifier}",
     method = RequestMethod.POST,
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
-  public List<FinancePositionEntity> addPositions(
+  public Flux<FinancePositionEntity> addPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
-    log.info("Add positions for user '{}'", userExternalIdentifier);
+      @NotEmpty @PathVariable("userAccountExternalIdentifier")
+          String userAccountExternalIdentifier) {
+    log.info("Add positions for user '{}'", userAccountExternalIdentifier);
     List<FinancePositionEntity> positionEntityList =
-        financeDataService.addPositions(financePositionEntityList, userExternalIdentifier);
-    return positionEntityList;
+        financeDataService.addPositions(financePositionEntityList, userAccountExternalIdentifier);
+    return fromIterable(positionEntityList);
   }
 
   @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'write')")
   @RequestMapping(
-    value = "/positions/{userExternalIdentifier}",
+    value = "/positions/{userAccountExternalIdentifier}",
     method = RequestMethod.PUT,
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.CREATED)
-  public List<FinancePositionEntity> putPositions(
+  public Flux<FinancePositionEntity> putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
-      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
-    log.info("Put positions for user '{}'", userExternalIdentifier);
+      @NotEmpty @PathVariable("userAccountExternalIdentifier")
+          String userAccountExternalIdentifier) {
+    log.info("Put positions for user '{}'", userAccountExternalIdentifier);
     List<FinancePositionEntity> positionEntityList =
-        financeDataService.putPositions(financePositionEntityList, userExternalIdentifier);
-    return positionEntityList;
+        financeDataService.putPositions(financePositionEntityList, userAccountExternalIdentifier);
+    return fromIterable(positionEntityList);
   }
 
   @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'write')")
   @RequestMapping(
-    value = "/positions/{userExternalIdentifier}/{positionExternalIdentifier}",
+    value = "/positions/{userAccountExternalIdentifier}/{positionExternalIdentifier}",
     method = RequestMethod.DELETE,
     produces = "application/json"
   )
   @ResponseStatus(HttpStatus.OK)
-  public Void deletePosition(
-      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier,
+  public Mono<Void> deletePosition(
+      @NotEmpty @PathVariable("userAccountExternalIdentifier") String userAccountExternalIdentifier,
       @NotEmpty @PathVariable("positionExternalIdentifier") String positionExternalIdentifier) {
     log.info(
-        "Delete position '{}' for user '{}'", positionExternalIdentifier, userExternalIdentifier);
-    financeDataService.deletePosition(userExternalIdentifier, positionExternalIdentifier);
-    return null;
+        "Delete position '{}' for user '{}'",
+        positionExternalIdentifier,
+        userAccountExternalIdentifier);
+    financeDataService.deletePosition(userAccountExternalIdentifier, positionExternalIdentifier);
+    return empty();
   }
 }

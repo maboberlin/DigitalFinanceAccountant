@@ -1,11 +1,14 @@
 package de.bitsandbooks.finance.config;
 
 import de.bitsandbooks.finance.security.AuthTokenFilter;
+import de.bitsandbooks.finance.security.UserAccountPermissionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -24,6 +27,8 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
+
+  @Autowired private ApplicationContext applicationContext;
 
   @Autowired private ReactiveUserDetailsService userDetailsService;
 
@@ -44,6 +49,10 @@ public class SecurityConfig {
 
   @Bean
   public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+    DefaultMethodSecurityExpressionHandler defaultWebSecurityExpressionHandler =
+        this.applicationContext.getBean(DefaultMethodSecurityExpressionHandler.class);
+    defaultWebSecurityExpressionHandler.setPermissionEvaluator(
+        new UserAccountPermissionEvaluator());
     return http.cors()
         .and()
         .csrf()

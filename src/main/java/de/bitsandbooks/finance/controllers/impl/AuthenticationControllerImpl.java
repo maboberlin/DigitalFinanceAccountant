@@ -2,7 +2,7 @@ package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.AuthenticationControllerInterface;
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
-import de.bitsandbooks.finance.exceptions.UserAlreadyExists;
+import de.bitsandbooks.finance.exceptions.UserAlreadyExistsException;
 import de.bitsandbooks.finance.model.dtos.AuthenticationRequestDto;
 import de.bitsandbooks.finance.model.entities.Role;
 import de.bitsandbooks.finance.model.entities.UserEntity;
@@ -62,7 +62,7 @@ public class AuthenticationControllerImpl implements AuthenticationControllerInt
       String eMail = userEntity.getMailAddress();
       userService.getUserByEmailAddress(eMail);
       String msg = String.format("User with id '%s' already exists", userEntity.getMailAddress());
-      throw new UserAlreadyExists(msg);
+      throw new UserAlreadyExistsException(msg);
     } catch (EntityNotFoundException e) {
       log.info("Creating user with id '{}'", userEntity.getMailAddress());
       userEntity.setRoles(Set.of(Role.ROLE_USER));

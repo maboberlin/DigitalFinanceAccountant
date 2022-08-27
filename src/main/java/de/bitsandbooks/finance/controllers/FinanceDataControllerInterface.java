@@ -7,22 +7,23 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import org.springframework.web.bind.annotation.RequestBody;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface FinanceDataControllerInterface {
   Mono<FinanceTotalDto> getTotalAmount(
       @NotEmpty String userExternalIdentifier, @NotNull String currency, Boolean byType);
 
-  List<FinancePositionEntity> getAllPositions(@NotEmpty String userExternalIdentifier);
+  Flux<FinancePositionEntity> getAllPositions(@NotEmpty String userExternalIdentifier);
 
-  List<FinancePositionEntity> addPositions(
+  Flux<FinancePositionEntity> addPositions(
       @Valid @NotEmpty List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty String userExternalIdentifier);
 
-  List<FinancePositionEntity> putPositions(
+  Flux<FinancePositionEntity> putPositions(
       @Valid @NotEmpty @RequestBody List<FinancePositionEntity> financePositionEntityList,
       @NotEmpty String userExternalIdentifier);
 
-  Void deletePosition(
+  Mono<Void> deletePosition(
       @NotEmpty String userExternalIdentifier, @NotEmpty String positionExternalIdentifier);
 }

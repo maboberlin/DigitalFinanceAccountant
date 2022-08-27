@@ -18,9 +18,11 @@ public class UserDetailsImpl implements UserDetails {
 
   private static final long serialVersionUID = 1L;
 
-  private String id;
+  private String externalIdentifier;
 
   private String email;
+
+  private Set<String> accountExternalIDSet;
 
   @JsonIgnore private String password;
 
@@ -28,12 +30,29 @@ public class UserDetailsImpl implements UserDetails {
 
   private UserDetailsImpl() {}
 
-  public static UserDetails create(String id, String email, String password, Set<Role> roles) {
+  public static UserDetails create(
+      String id, String email, String password, Set<String> accountIDList, Set<Role> roles) {
     UserDetailsImpl userDetails = new UserDetailsImpl();
-    userDetails.setId(id);
+    userDetails.setExternalIdentifier(id);
     userDetails.setEmail(email);
     userDetails.setPassword(password);
+    userDetails.setAccountExternalIDSet(accountIDList);
     userDetails.setAuthorities(collectAuthorities(roles));
+    return userDetails;
+  }
+
+  public static UserDetails createWithAuthorities(
+      String id,
+      String email,
+      String password,
+      Set<String> accountIDList,
+      Collection<? extends GrantedAuthority> authorities) {
+    UserDetailsImpl userDetails = new UserDetailsImpl();
+    userDetails.setExternalIdentifier(id);
+    userDetails.setEmail(email);
+    userDetails.setPassword(password);
+    userDetails.setAccountExternalIDSet(accountIDList);
+    userDetails.setAuthorities(authorities);
     return userDetails;
   }
 
@@ -84,6 +103,6 @@ public class UserDetailsImpl implements UserDetails {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
     UserDetailsImpl user = (UserDetailsImpl) o;
-    return Objects.equals(id, user.id);
+    return Objects.equals(email, user.email);
   }
 }

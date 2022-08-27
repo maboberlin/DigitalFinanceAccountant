@@ -2,17 +2,18 @@ package de.bitsandbooks.finance.controllers;
 
 import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.model.entities.UserEntity;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface UserControllerInterface {
-  UserAccountEntity createUserAccount(
+  Mono<UserAccountEntity> createUserAccount(
       @NotEmpty String userExternalIdentifier, @Valid UserAccountEntity userEntity);
 
-  UserEntity getUser(@NotEmpty String userExternalIdentifier);
+  Mono<UserEntity> getUser(@NotEmpty String userExternalIdentifier);
 
-  List<UserEntity> getAllUsers();
+  Flux<UserEntity> getAllUsers();
 
-  UserEntity findUser(@NotEmpty String eMail, @NotEmpty String accountIdentifier);
+  Mono<UserEntity> findUser(@NotEmpty String eMail, @NotEmpty String accountIdentifier);
 }

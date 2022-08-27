@@ -1,7 +1,10 @@
 package de.bitsandbooks.finance.security;
 
+import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.model.entities.UserEntity;
 import de.bitsandbooks.finance.services.UserService;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,10 +25,17 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
   }
 
   private UserDetails mapToUserDetails(UserEntity userEntity) {
+    Set<String> accountExternalIdentifierSet =
+        userEntity
+            .getUserAccountEntityList()
+            .stream()
+            .map(UserAccountEntity::getExternalIdentifier)
+            .collect(Collectors.toSet());
     return UserDetailsImpl.create(
-        userEntity.getId(),
+        userEntity.getExternalIdentifier(),
         userEntity.getMailAddress(),
         userEntity.getPassword(),
+        accountExternalIdentifierSet,
         userEntity.getRoles());
   }
 }
