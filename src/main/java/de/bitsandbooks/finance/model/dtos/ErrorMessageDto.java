@@ -1,5 +1,6 @@
 package de.bitsandbooks.finance.model.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.OffsetDateTime;
 import lombok.*;
 
@@ -10,7 +11,9 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class ErrorMessageDto {
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss.SSSSSSx")
   private OffsetDateTime timestamp;
+
   private Integer status;
   private String error;
   private String message;
