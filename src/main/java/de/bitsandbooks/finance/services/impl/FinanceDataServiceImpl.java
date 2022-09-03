@@ -90,13 +90,14 @@ public class FinanceDataServiceImpl implements FinanceDataService {
 
   @Transactional
   @Override
-  public void deletePosition(String userExternalIdentifier, String positionExternalIdentifier) {
+  public Void deletePosition(String userExternalIdentifier, String positionExternalIdentifier) {
     Long aLong = financePositionRepository.deleteByExternalIdentifier(positionExternalIdentifier);
     if (aLong == 0) {
       log.warn(
           "FinancePositionEntity with externalIdentifier '{}' could not be found and though not be deleted.",
           positionExternalIdentifier);
     }
+    return null;
   }
 
   private void checkPositionsExist(List<FinancePositionEntity> financePositionEntityList) {

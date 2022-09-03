@@ -1,6 +1,8 @@
 package de.bitsandbooks.finance.config;
 
 import de.bitsandbooks.finance.security.AuthTokenFilter;
+import de.bitsandbooks.finance.security.AuthTokenProvider;
+import de.bitsandbooks.finance.security.CustomReactiveAuthenticationManager;
 import de.bitsandbooks.finance.security.UserAccountPermissionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
@@ -34,10 +34,12 @@ public class SecurityConfig {
 
   @Autowired private AuthTokenFilter authTokenFilter;
 
+  @Autowired private AuthTokenProvider authTokenProvider;
+
   @Bean
-  public ReactiveAuthenticationManager authenticationManager() {
-    UserDetailsRepositoryReactiveAuthenticationManager authenticationManager =
-        new UserDetailsRepositoryReactiveAuthenticationManager(this.userDetailsService);
+  public CustomReactiveAuthenticationManager authenticationManager() {
+    CustomReactiveAuthenticationManager authenticationManager =
+        new CustomReactiveAuthenticationManager(this.userDetailsService, this.authTokenProvider);
     authenticationManager.setPasswordEncoder(passwordEncoder());
     return authenticationManager;
   }

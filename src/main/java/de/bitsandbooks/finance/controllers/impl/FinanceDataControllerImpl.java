@@ -1,8 +1,5 @@
 package de.bitsandbooks.finance.controllers.impl;
 
-import static reactor.core.publisher.Flux.fromIterable;
-import static reactor.core.publisher.Mono.empty;
-
 import de.bitsandbooks.finance.controllers.FinanceDataControllerInterface;
 import de.bitsandbooks.finance.model.dtos.FinanceTotalDto;
 import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
@@ -20,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Validated
@@ -59,7 +57,10 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
       @NotEmpty @PathVariable("userAccountExternalIdentifier")
           String userAccountExternalIdentifier) {
     log.info("Getting all positions for user '{}'", userAccountExternalIdentifier);
-    return fromIterable(financeDataService.getAllPositions(userAccountExternalIdentifier));
+    return Mono.fromCallable(
+            () -> financeDataService.getAllPositions(userAccountExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMapMany(Flux::fromIterable);
   }
 
   @Override
@@ -76,9 +77,12 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
       @NotEmpty @PathVariable("userAccountExternalIdentifier")
           String userAccountExternalIdentifier) {
     log.info("Add positions for user '{}'", userAccountExternalIdentifier);
-    List<FinancePositionEntity> positionEntityList =
-        financeDataService.addPositions(financePositionEntityList, userAccountExternalIdentifier);
-    return fromIterable(positionEntityList);
+    return Mono.fromCallable(
+            () ->
+                financeDataService.addPositions(
+                    financePositionEntityList, userAccountExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMapMany(Flux::fromIterable);
   }
 
   @Override
@@ -95,9 +99,12 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
       @NotEmpty @PathVariable("userAccountExternalIdentifier")
           String userAccountExternalIdentifier) {
     log.info("Put positions for user '{}'", userAccountExternalIdentifier);
-    List<FinancePositionEntity> positionEntityList =
-        financeDataService.putPositions(financePositionEntityList, userAccountExternalIdentifier);
-    return fromIterable(positionEntityList);
+    return Mono.fromCallable(
+            () ->
+                financeDataService.putPositions(
+                    financePositionEntityList, userAccountExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMapMany(Flux::fromIterable);
   }
 
   @Override
@@ -116,7 +123,10 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
         "Delete position '{}' for user '{}'",
         positionExternalIdentifier,
         userAccountExternalIdentifier);
-    financeDataService.deletePosition(userAccountExternalIdentifier, positionExternalIdentifier);
-    return empty();
+    return Mono.fromCallable(
+            () ->
+                financeDataService.deletePosition(
+                    userAccountExternalIdentifier, positionExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic());
   }
 }

@@ -1,12 +1,9 @@
 package de.bitsandbooks.finance.controllers.impl;
 
-import static reactor.core.publisher.Mono.just;
-
 import de.bitsandbooks.finance.controllers.UserControllerInterface;
 import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.model.entities.UserEntity;
 import de.bitsandbooks.finance.services.UserService;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
 import lombok.NonNull;
@@ -18,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Slf4j
 @Validated
@@ -40,9 +38,9 @@ public class UserControllerImpl implements UserControllerInterface {
       @NotEmpty @PathVariable(name = "userExternalIdentifier") String userExternalIdentifier,
       @Valid @RequestBody UserAccountEntity userAccountEntity) {
     log.info("Creating user account");
-    UserAccountEntity userAccount =
-        userService.createUserAccount(userExternalIdentifier, userAccountEntity);
-    return just(userAccount);
+    return Mono.fromCallable(
+            () -> userService.createUserAccount(userExternalIdentifier, userAccountEntity))
+        .subscribeOn(Schedulers.boundedElastic());
   }
 
   @Override
@@ -56,9 +54,8 @@ public class UserControllerImpl implements UserControllerInterface {
   public Mono<UserEntity> getUser(
       @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
     log.info("Find user with userExternalIdentifier '{}'", userExternalIdentifier);
-    UserEntity userByExternalIdentifier =
-        userService.getUserByExternalIdentifier(userExternalIdentifier);
-    return just(userByExternalIdentifier);
+    return Mono.fromCallable(() -> userService.getUserByExternalIdentifier(userExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic());
   }
 
   @Override
@@ -66,8 +63,9 @@ public class UserControllerImpl implements UserControllerInterface {
   @RequestMapping(value = "", method = RequestMethod.GET, produces = "application/json")
   public Flux<UserEntity> getAllUsers() {
     log.info("Get all users");
-    List<UserEntity> allUsers = userService.getAllUsers();
-    return Flux.fromIterable(allUsers);
+    return Mono.fromCallable(userService::getAllUsers)
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMapMany(Flux::fromIterable);
   }
 
   @Override
@@ -77,7 +75,7 @@ public class UserControllerImpl implements UserControllerInterface {
       @NotEmpty @RequestParam("eMail") String eMail,
       @NotEmpty @RequestParam("accountIdentifier") String accountIdentifier) {
     log.info("Find user with eMail '{}' and accountIdentifier '{}'", eMail, accountIdentifier);
-    UserEntity user = userService.getUser(eMail, accountIdentifier);
-    return Mono.just(user);
+    return Mono.fromCallable(() -> userService.getUser(eMail, accountIdentifier))
+        .subscribeOn(Schedulers.boundedElastic());
   }
 }

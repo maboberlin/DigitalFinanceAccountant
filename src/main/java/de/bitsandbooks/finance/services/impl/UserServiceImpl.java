@@ -1,6 +1,8 @@
 package de.bitsandbooks.finance.services.impl;
 
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
+import de.bitsandbooks.finance.exceptions.UserAlreadyExistsException;
+import de.bitsandbooks.finance.model.entities.Role;
 import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.model.entities.UserEntity;
 import de.bitsandbooks.finance.repositories.UserAccountRepository;
@@ -8,6 +10,7 @@ import de.bitsandbooks.finance.repositories.UserRepository;
 import de.bitsandbooks.finance.services.UserService;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +30,19 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserEntity createUser(UserEntity userEntity) {
-    encodePassword(userEntity);
-    UserEntity result = userRepository.save(userEntity);
-    log.info("Created user entity with id '{}'", userEntity.getId());
-    return result;
+    try {
+      String eMail = userEntity.getMailAddress();
+      this.getUserByEmailAddress(eMail);
+      String msg = String.format("User with id '%s' already exists", userEntity.getMailAddress());
+      throw new UserAlreadyExistsException(msg);
+    } catch (EntityNotFoundException e) {
+      log.info("Creating user with id '{}'", userEntity.getMailAddress());
+      userEntity.setRoles(Set.of(Role.ROLE_USER));
+      encodePassword(userEntity);
+      UserEntity result = userRepository.save(userEntity);
+      log.info("Created user entity with id '{}'", userEntity.getId());
+      return result;
+    }
   }
 
   @Override

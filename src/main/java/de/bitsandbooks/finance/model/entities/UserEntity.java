@@ -2,10 +2,7 @@ package de.bitsandbooks.finance.model.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
@@ -51,7 +48,7 @@ public class UserEntity {
   @JsonIgnore
   @ElementCollection
   @Enumerated(EnumType.STRING)
-  private Set<Role> roles;
+  private Set<Role> roles = new HashSet<>();
 
   @JsonIgnore
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)

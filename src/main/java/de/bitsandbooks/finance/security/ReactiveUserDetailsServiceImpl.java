@@ -20,8 +20,8 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
   @Override
   public Mono<UserDetails> findByUsername(String emailAddress) {
     return Mono.fromCallable(() -> userService.getUserByEmailAddress(emailAddress))
-        .map(this::mapToUserDetails)
-        .subscribeOn(Schedulers.boundedElastic());
+        .subscribeOn(Schedulers.boundedElastic())
+        .map(this::mapToUserDetails);
   }
 
   private UserDetails mapToUserDetails(UserEntity userEntity) {

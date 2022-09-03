@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 
 public interface AuthenticationControllerInterface {
 
-  Mono<ResponseEntity> signIn(Mono<AuthenticationRequestDto> authRequest);
+  Mono<ResponseEntity> signIn(AuthenticationRequestDto authRequest);
 
   Mono<ResponseEntity> signUp(UserEntity authRequest);
 }

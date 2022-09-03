@@ -3,6 +3,8 @@ package de.bitsandbooks.finance.security;
 import static org.apache.commons.lang3.ObjectUtils.allNotNull;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.core.Authentication;
@@ -21,31 +23,33 @@ public class UserAccountPermissionEvaluator implements PermissionEvaluator {
   @Override
   public boolean hasPermission(
       Authentication authentication, Serializable targetId, String targetType, Object permission) {
-    if (!allNotNull(authentication, authentication.getPrincipal(), targetId, targetType, permission)
-        || !(authentication.getPrincipal() instanceof UserDetailsImpl)
-        || !(targetId instanceof String)
-        || !(targetType instanceof String)
-        || !(permission instanceof String)) {
-      return false;
+    if (allNotNull(authentication, authentication.getPrincipal(), targetId, targetType, permission)
+        && (authentication.getPrincipal() instanceof UserDetailsImpl)
+        && (targetId instanceof String)
+        && (targetType instanceof String)
+        && (permission instanceof String)) {
+      switch (targetType) {
+        case EXTERNAL_ACCOUNT_IDENTIFIER:
+          return hasAuthorizedAccount(
+              (UserDetailsImpl) authentication.getPrincipal(), (String) targetId);
+        case USER_IDENTIFIER:
+          return isAuthorizedUser(
+              (UserDetailsImpl) authentication.getPrincipal(), (String) targetId);
+        default:
+          return false;
+      }
     }
-    switch (targetType) {
-      case EXTERNAL_ACCOUNT_IDENTIFIER:
-        return hasAuthorizedAccount(
-            (UserDetailsImpl) authentication.getPrincipal(), (String) targetId);
-      case USER_IDENTIFIER:
-        return isAuthorizedUser((UserDetailsImpl) authentication.getPrincipal(), (String) targetId);
-      default:
-        return false;
-    }
-  }
-
-  private boolean isAuthorizedUser(UserDetailsImpl principal, String externalUserId) {
-    return externalUserId.equals(principal.getExternalIdentifier());
+    return false;
   }
 
   private boolean hasAuthorizedAccount(
       UserDetailsImpl principal, String externalAccountIdentifier) {
-    Set<String> accountExternalIDSet = principal.getAccountExternalIDSet();
+    Set<String> accountExternalIDSet =
+        Optional.ofNullable(principal.getAccountExternalIDSet()).orElse(Collections.emptySet());
     return accountExternalIDSet.contains(externalAccountIdentifier);
+  }
+
+  private boolean isAuthorizedUser(UserDetailsImpl principal, String externalUserId) {
+    return externalUserId.equals(principal.getExternalIdentifier());
   }
 }
