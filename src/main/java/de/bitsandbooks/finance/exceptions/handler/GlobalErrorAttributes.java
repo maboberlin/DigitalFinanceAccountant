@@ -26,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class GlobalErrorAttributes extends DefaultErrorAttributes {
 
-  private final List<ExceptionRule<?>> exceptionsRules =
+  private final List<ExceptionRule<? extends Throwable>> exceptionsRules =
       List.of(
           new ExceptionRule<>(
               EntityNotFoundException.class,
@@ -61,15 +61,11 @@ public class GlobalErrorAttributes extends DefaultErrorAttributes {
     Throwable error = getError(request);
 
     final OffsetDateTime timestamp = OffsetDateTime.now();
-    Optional<? extends ExceptionRule<? extends Throwable>> exceptionRuleOptional =
+    Optional<ExceptionRule<? extends Throwable>> exceptionRuleOptional =
         exceptionsRules
             .stream()
-            .map(
-                exceptionRule ->
-                    exceptionRule.getExceptionClass().isAssignableFrom(error.getClass())
-                        ? exceptionRule
-                        : null)
             .filter(Objects::nonNull)
+            .filter(exceptionRule -> exceptionRule.getExceptionClass().isAssignableFrom(error.getClass()))
             .findFirst();
 
     Map<String, Object> stringObjectMap =
@@ -80,7 +76,7 @@ public class GlobalErrorAttributes extends DefaultErrorAttributes {
                         ErrorAttributesKey.STATUS.getKey(),
                         exceptionRule.getHttpStatus(),
                         ErrorAttributesKey.MESSAGE.getKey(),
-                        error.getMessage(),
+                        ((ExceptionRule<Throwable>) exceptionRule).getMessageProvider().apply(error),
                         ErrorAttributesKey.TIME.getKey(),
                         timestamp))
             .orElseGet(
