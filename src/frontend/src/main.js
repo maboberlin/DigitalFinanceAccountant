@@ -5,7 +5,7 @@ import router from "./router";
 import './assets/reset.css';
 
 import "bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
+
 import { FontAwesomeIcon } from './plugins/font-awesome'
 
 createApp(App)
