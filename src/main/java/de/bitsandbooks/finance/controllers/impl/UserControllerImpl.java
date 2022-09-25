@@ -29,7 +29,7 @@ public class UserControllerImpl implements UserControllerInterface {
   @Override
   @PreAuthorize("hasPermission(#userExternalIdentifier, 'USER_IDENTIFIER', 'write')")
   @RequestMapping(
-    value = "/{userExternalIdentifier}/account",
+    value = "/{userExternalIdentifier}/accounts",
     method = RequestMethod.POST,
     produces = "application/json"
   )
@@ -76,6 +76,40 @@ public class UserControllerImpl implements UserControllerInterface {
       @NotEmpty @RequestParam("accountIdentifier") String accountIdentifier) {
     log.info("Find user with eMail '{}' and accountIdentifier '{}'", eMail, accountIdentifier);
     return Mono.fromCallable(() -> userService.getUser(eMail, accountIdentifier))
+        .subscribeOn(Schedulers.boundedElastic());
+  }
+
+  @Override
+  @PreAuthorize(
+      "hasPermission(#userExternalIdentifier, 'USER_IDENTIFIER', 'read') or hasRole('ROLE_ADMIN')")
+  @RequestMapping(
+    value = "/{userExternalIdentifier}/accounts",
+    method = RequestMethod.GET,
+    produces = "application/json"
+  )
+  public Flux<UserAccountEntity> getAccountsForUser(
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier) {
+    log.info("Get all accounts for user with identifier: '{}'", userExternalIdentifier);
+    return Mono.fromCallable(() -> userService.getUserAccounts(userExternalIdentifier))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMapMany(Flux::fromIterable);
+  }
+
+  @Override
+  @PreAuthorize("hasPermission(#userExternalIdentifier, 'USER_IDENTIFIER', 'write')")
+  @RequestMapping(
+    value = "/{userExternalIdentifier}/accounts/{accountExternalIdentifier}",
+    method = RequestMethod.DELETE
+  )
+  public Mono<Void> deleteAccountForUser(
+      @NotEmpty @PathVariable("userExternalIdentifier") String userExternalIdentifier,
+      @NotEmpty @PathVariable("accountExternalIdentifier") String accountExternalIdentifier) {
+    log.info(
+        "Delete account '{}' for user with identifier: '{}'",
+        accountExternalIdentifier,
+        userExternalIdentifier);
+    return Mono.fromCallable(
+            () -> userService.deleteUserAccount(userExternalIdentifier, accountExternalIdentifier))
         .subscribeOn(Schedulers.boundedElastic());
   }
 }

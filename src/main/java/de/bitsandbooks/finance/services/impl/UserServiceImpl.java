@@ -117,6 +117,23 @@ public class UserServiceImpl implements UserService {
                         eMail, accountIdentifier)));
   }
 
+  @Override
+  public List<UserAccountEntity> getUserAccounts(String userExternalIdentifier) {
+    return this.getUserByExternalIdentifier(userExternalIdentifier).getUserAccountEntityList();
+  }
+
+  @Override
+  public Void deleteUserAccount(String userExternalIdentifier, String accountExternalIdentifier) {
+    UserEntity userEntity = this.getUserByExternalIdentifier(userExternalIdentifier);
+    userEntity
+        .getUserAccountEntityList()
+        .removeIf(
+            userAccountEntity ->
+                userAccountEntity.getExternalIdentifier().equals(accountExternalIdentifier));
+    this.userRepository.save(userEntity);
+    return null;
+  }
+
   private void encodePassword(UserEntity userEntity) {
     String password = userEntity.getPassword();
     String passwordEncode = encoder.encode(password);

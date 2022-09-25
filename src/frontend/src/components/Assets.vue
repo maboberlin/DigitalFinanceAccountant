@@ -1,4 +1,8 @@
 <template>
+    <div>
+        <h2>Total</h2>
+        <p>{{ total.value }}</p>
+    </div>
     <hr>
     <h2>Positions</h2>
     <table id="assetsTable" class="table table-bordered table-striped">
@@ -45,21 +49,25 @@ export default {
         tableHeaders: ['Symbol','Name','Amount','Currency','Type']
     }
   },
-  name: 'AssetsTable',
+  name: 'Assets',
   computed: {
+    total() {
+      return this.$store.getters.total;
+    },
     positions() {
       return this.$store.getters.positions;
     },
   },
   created() {
-    this.$store.dispatch('loadPositions');
+    this.$store.dispatch('loadPositions', this.$route.params.accountExternalIdentifier );
+    this.$store.dispatch('loadTotal', this.$route.params.accountExternalIdentifier);
   },
   methods: {
     addPosition: function(){
-      this.$store.dispatch('addPosition');
+      this.$store.dispatch('addPosition', this.$route.params.accountExternalIdentifier);
     },
     removePosition: function(externalIdentifier){
-      this.$store.dispatch('removePosition', externalIdentifier);
+      this.$store.dispatch('removePosition', { accountId: this.$route.params.accountExternalIdentifier, positionId: externalIdentifier });
     },
   }
 }

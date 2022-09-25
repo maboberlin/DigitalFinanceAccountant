@@ -16,4 +16,9 @@ public interface UserControllerInterface {
   Flux<UserEntity> getAllUsers();
 
   Mono<UserEntity> findUser(@NotEmpty String eMail, @NotEmpty String accountIdentifier);
+
+  Flux<UserAccountEntity> getAccountsForUser(@NotEmpty String userExternalIdentifier);
+
+  Mono<Void> deleteAccountForUser(
+      @NotEmpty String userExternalIdentifier, @NotEmpty String accountExternalIdentifier);
 }

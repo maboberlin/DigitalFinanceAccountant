@@ -22,6 +22,10 @@ public class UserDetailsImpl implements UserDetails {
 
   private String email;
 
+  private String forename;
+
+  private String surname;
+
   private Set<String> accountExternalIDSet;
 
   @JsonIgnore private String password;
@@ -31,10 +35,18 @@ public class UserDetailsImpl implements UserDetails {
   private UserDetailsImpl() {}
 
   public static UserDetails create(
-      String id, String email, String password, Set<String> accountIDList, Set<Role> roles) {
+      String id,
+      String email,
+      String forename,
+      String surname,
+      String password,
+      Set<String> accountIDList,
+      Set<Role> roles) {
     UserDetailsImpl userDetails = new UserDetailsImpl();
     userDetails.setExternalIdentifier(id);
     userDetails.setEmail(email);
+    userDetails.setForename(forename);
+    userDetails.setSurname(surname);
     userDetails.setPassword(password);
     userDetails.setAccountExternalIDSet(accountIDList);
     userDetails.setAuthorities(collectAuthorities(roles));
@@ -44,12 +56,16 @@ public class UserDetailsImpl implements UserDetails {
   public static UserDetails createWithAuthorities(
       String id,
       String email,
+      String forename,
+      String surname,
       String password,
       Set<String> accountIDList,
       Collection<? extends GrantedAuthority> authorities) {
     UserDetailsImpl userDetails = new UserDetailsImpl();
     userDetails.setExternalIdentifier(id);
     userDetails.setEmail(email);
+    userDetails.setForename(forename);
+    userDetails.setSurname(surname);
     userDetails.setPassword(password);
     userDetails.setAccountExternalIDSet(accountIDList);
     userDetails.setAuthorities(authorities);

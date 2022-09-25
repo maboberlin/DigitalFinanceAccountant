@@ -79,7 +79,7 @@ public class SecurityConfig {
         .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
         .addFilterBefore(this.authTokenFilter, SecurityWebFiltersOrder.HTTP_BASIC)
         .authorizeExchange()
-        .pathMatchers("/api/auth/**")
+        .pathMatchers("/api/auth/sign*/**")
         .permitAll()
         .anyExchange()
         .authenticated()

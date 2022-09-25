@@ -34,6 +34,8 @@ public class ReactiveUserDetailsServiceImpl implements ReactiveUserDetailsServic
     return UserDetailsImpl.create(
         userEntity.getExternalIdentifier(),
         userEntity.getMailAddress(),
+        userEntity.getForeName(),
+        userEntity.getSurName(),
         userEntity.getPassword(),
         accountExternalIdentifierSet,
         userEntity.getRoles());

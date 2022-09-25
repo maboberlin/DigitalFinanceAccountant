@@ -5,20 +5,19 @@ import de.bitsandbooks.finance.model.dtos.AuthenticationRequestDto;
 import de.bitsandbooks.finance.model.entities.UserEntity;
 import de.bitsandbooks.finance.security.CustomReactiveAuthenticationManager;
 import de.bitsandbooks.finance.services.UserService;
-import java.util.Map;
+import java.security.Principal;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
+@Validated
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -32,13 +31,25 @@ public class AuthenticationControllerImpl implements AuthenticationControllerInt
   @PostMapping("/signIn")
   public Mono<ResponseEntity> signIn(@Valid @RequestBody AuthenticationRequestDto authRequest) {
     return this.authenticationManager
-        .getJwtByAuthentication(authRequest.getEmail(), authRequest.getPassword())
+        .getAuthentication(authRequest.getEmail(), authRequest.getPassword())
         .map(
-            jwt -> {
+            jwtResponse -> {
               HttpHeaders httpHeaders = new HttpHeaders();
-              httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-              Map<String, String> accessToken = Map.of("accessToken", jwt);
-              return new ResponseEntity<>(accessToken, httpHeaders, HttpStatus.OK);
+              httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwtResponse.getAccessToken());
+              return new ResponseEntity<>(jwtResponse, httpHeaders, HttpStatus.OK);
+            });
+  }
+
+  @GetMapping("/refresh")
+  public Mono<ResponseEntity> refresh(Mono<Principal> principal) {
+    return principal
+        .flatMap(
+            principal1 -> this.authenticationManager.updateAuthentication(principal1.getName()))
+        .map(
+            jwtResponse -> {
+              HttpHeaders httpHeaders = new HttpHeaders();
+              httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwtResponse.getAccessToken());
+              return new ResponseEntity<>(jwtResponse, httpHeaders, HttpStatus.OK);
             });
   }
 

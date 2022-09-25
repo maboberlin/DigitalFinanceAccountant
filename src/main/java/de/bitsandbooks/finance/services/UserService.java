@@ -17,4 +17,8 @@ public interface UserService {
   UserEntity getUser(String eMail, String accountIdentifier);
 
   UserEntity createUser(UserEntity userEntity);
+
+  List<UserAccountEntity> getUserAccounts(String userExternalIdentifier);
+
+  Void deleteUserAccount(String userExternalIdentifier, String accountExternalIdentifier);
 }

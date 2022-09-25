@@ -1,0 +1,45 @@
+import { createWebHistory, createRouter } from "vue-router";
+import Login from "./components/Login.vue";
+import Empty from "./components/Empty.vue";
+import Register from "./components/Register.vue";
+import User from "./components/User.vue";
+// lazy-loaded
+const Accounts = () => import("./components/Accounts.vue")
+const Assets = () => import("./components/Assets.vue")
+const routes = [
+  {
+    path: "/",
+    name: "empty",
+    component: Empty,
+  },
+  {
+    path: "/login",
+    component: Login,
+  },
+  {
+    path: "/register",
+    component: Register,
+  },
+  {
+    path: "/accounts",
+    name: "accounts",
+    // lazy-loaded
+    component: Accounts,
+  },
+  {
+    path: "/assets/:accountExternalIdentifier",
+    name: "assets",
+    // lazy-loaded
+    component: Assets,
+  },
+  {
+    path: "/user",
+    name: "user",
+    component: User,
+  },
+];
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
+});
+export default router;

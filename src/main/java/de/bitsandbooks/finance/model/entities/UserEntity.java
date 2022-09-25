@@ -6,6 +6,7 @@ import java.util.*;
 import javax.persistence.*;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -39,7 +40,7 @@ public class UserEntity {
 
   @NotEmpty private String surName;
 
-  @Email private String mailAddress;
+  @NotNull @Email private String mailAddress;
 
   @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
   @NotEmpty

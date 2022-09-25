@@ -65,7 +65,9 @@ public class GlobalErrorAttributes extends DefaultErrorAttributes {
         exceptionsRules
             .stream()
             .filter(Objects::nonNull)
-            .filter(exceptionRule -> exceptionRule.getExceptionClass().isAssignableFrom(error.getClass()))
+            .filter(
+                exceptionRule ->
+                    exceptionRule.getExceptionClass().isAssignableFrom(error.getClass()))
             .findFirst();
 
     Map<String, Object> stringObjectMap =
@@ -76,7 +78,9 @@ public class GlobalErrorAttributes extends DefaultErrorAttributes {
                         ErrorAttributesKey.STATUS.getKey(),
                         exceptionRule.getHttpStatus(),
                         ErrorAttributesKey.MESSAGE.getKey(),
-                        ((ExceptionRule<Throwable>) exceptionRule).getMessageProvider().apply(error),
+                        ((ExceptionRule<Throwable>) exceptionRule)
+                            .getMessageProvider()
+                            .apply(error),
                         ErrorAttributesKey.TIME.getKey(),
                         timestamp))
             .orElseGet(
