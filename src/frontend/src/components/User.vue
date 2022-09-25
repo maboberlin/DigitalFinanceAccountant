@@ -1,9 +1,9 @@
 <template>
     <div class="container">
         <header class="jumbotron">
-            <h3>
+            <h2>
                 <strong>{{currentUser.forename}} {{currentUser.surname}}</strong>
-            </h3>
+            </h2>
         </header>
         <p>
             <strong>Token:</strong>
@@ -39,3 +39,10 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+  h2 {
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
+</style>

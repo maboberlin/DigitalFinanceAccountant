@@ -24,10 +24,8 @@
         <li class="nav-item">
           <router-link v-if="currentUser" to="/accounts" class="nav-link">Accounts</router-link>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" @click.prevent="logOut">
-            <font-awesome-icon icon="sign-out-alt" /> LogOut
-          </a>
+        <li class="nav-item" @click.prevent="logOut">
+            <router-link v-if="currentUser" to="/logout" class="nav-link"><font-awesome-icon icon="sign-out-alt" /> LogOut</router-link>
         </li>
       </div>
     </nav>

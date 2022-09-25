@@ -89,6 +89,9 @@ export default {
 };
 </script>
 <style scoped>
+button {
+  margin-top: 20px;
+}
 label {
   display: block;
   margin-top: 10px;
