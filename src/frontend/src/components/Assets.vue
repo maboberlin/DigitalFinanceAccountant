@@ -45,7 +45,7 @@
             <td v-if="position.isEdit === false">{{ position.identifier }}</td>
             <td v-if="position.isEdit === false">{{ position.name }}</td>
             <td v-if="position.isEdit === false">{{ position.amount }}</td>
-            <td v-if="position.isEdit === false">{{ position.value }}</td>
+            <td v-if="position.isEdit === false">{{ position.price }}</td>
             <td v-if="position.isEdit === false">{{ position.currency }}</td>
             <td v-if="position.isEdit === false">{{ position.type }}</td>
 
@@ -77,7 +77,7 @@
 export default {
   data() {
     return {
-        tableHeaders: ['Symbol','Name','Amount','Value','Currency', 'Type'],
+        tableHeaders: ['Symbol','Name','Amount','Price','Currency', 'Type'],
     }
   },
   name: 'Assets',

@@ -1,6 +1,6 @@
 package de.bitsandbooks.finance.connectors;
 
-import de.bitsandbooks.finance.model.dtos.PriceDto;
+import de.bitsandbooks.finance.model.dtos.ValueDto;
 import reactor.core.publisher.Mono;
 
 public interface FinanceDataConnector {
@@ -8,5 +8,9 @@ public interface FinanceDataConnector {
 
   boolean hasPositionDataForLastDailyClosingPrice(String identifier);
 
-  Mono<PriceDto> getActualPrice(String identifier);
+  Mono<ValueDto> getActualValue(String identifier);
+
+  Mono<Boolean> hasActualValue(String identifier);
+
+  Mono<String> getCurrency(String identifier);
 }

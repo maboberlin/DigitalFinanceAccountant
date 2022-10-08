@@ -1,7 +1,7 @@
 package de.bitsandbooks.finance.connectors;
 
-import de.bitsandbooks.finance.model.dtos.PriceDto;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 public abstract class AbstractFinanceDataConnector implements FinanceDataConnector {
@@ -11,14 +11,12 @@ public abstract class AbstractFinanceDataConnector implements FinanceDataConnect
     log.info(
         "Check if '{}' API has position for identifier: {}", this.getConnectorType(), identifier);
     try {
-      PriceDto priceDto = this.getActualPrice(identifier).block();
-      return priceDto != null;
+      return this.hasActualValue(identifier).switchIfEmpty(Mono.just(Boolean.FALSE)).block();
     } catch (Exception e) {
       log.warn(
           "Connector '{}' could not find position for identifier: '{}'",
           this.getConnectorType().toString(),
-          identifier,
-          e);
+          identifier);
       return false;
     }
   }

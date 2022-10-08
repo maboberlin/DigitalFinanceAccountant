@@ -1,5 +1,6 @@
 package de.bitsandbooks.finance.services.impl;
 
+import static java.util.Optional.ofNullable;
 import static reactor.core.publisher.Mono.just;
 
 import de.bitsandbooks.finance.connectors.ConnectorFacade;
@@ -12,7 +13,6 @@ import de.bitsandbooks.finance.repositories.UserAccountRepository;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.math.BigDecimal;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +42,66 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         : getFinanceTotalDtoInternal(externalIdentifier, currency);
   }
 
+  private Mono<FinanceTotalDto> getFinanceTotalDtoInternal(
+      String externalIdentifier, String currency) {
+    return this.getAllPositions(externalIdentifier)
+        .flatMap(el -> positionToCurrencyValue(el, currency))
+        .map(el -> el.getValueDto().getPrice())
+        .reduceWith(() -> BigDecimal.ZERO, BigDecimal::add)
+        .map(el -> new FinanceTotalDto(currency, el, null));
+  }
+
+  private Mono<FinanceTotalDto> getFinanceTotalDtoInternalByType(
+      String externalIdentifier, String currency) {
+    return this.getAllPositions(externalIdentifier)
+        .flatMap(el -> positionToCurrencyValue(el, currency))
+        .collectList()
+        .map(this::buildPositionTypeMap)
+        .map(el -> this.buildFinanceTotalDto(el, currency));
+  }
+
+  private Mono<ValueWithTypeDto> positionToCurrencyValue(
+      FinancePositionEntity position, String currency) {
+    boolean positionValueCurrencyEqualsCurrency = position.getCurrency().equals(currency);
+    if (positionValueCurrencyEqualsCurrency) {
+      return just(
+          new ValueWithTypeDto(
+              new ValueDto(position.getCurrency(), position.getPrice()), position.getType()));
+    } else {
+      return connectorFacade
+          .convertToCurrency(position.getCurrency(), currency)
+          .map(exchangeRateDto -> exchangeRateDto.getExchangeRate().multiply((position.getPrice())))
+          .map(
+              exchangedPrice ->
+                  new ValueWithTypeDto(new ValueDto(currency, exchangedPrice), position.getType()));
+    }
+  }
+
+  private Map<PositionType, BigDecimal> buildPositionTypeMap(
+      Collection<ValueWithTypeDto> valueWithTypeDtoCollection) {
+    Map<PositionType, BigDecimal> result = new HashMap<>();
+    valueWithTypeDtoCollection.forEach(
+        el -> {
+          if (result.containsKey(el.getPositionType())) {
+            BigDecimal mapEntry = result.get(el.getPositionType());
+            BigDecimal value = el.getValueDto().getPrice();
+            BigDecimal newMapEntry = mapEntry.add(value);
+            result.put(el.getPositionType(), newMapEntry);
+          } else {
+            BigDecimal value = el.getValueDto().getPrice();
+            result.put(el.getPositionType(), value == null ? BigDecimal.ZERO : value);
+          }
+        });
+    return result;
+  }
+
+  private FinanceTotalDto buildFinanceTotalDto(
+      Map<PositionType, BigDecimal> positionTypeValueDtoMap, String currency) {
+    BigDecimal total =
+        positionTypeValueDtoMap.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+    return new FinanceTotalDto(currency, total, positionTypeValueDtoMap);
+  }
+
   @Transactional(readOnly = true)
   @Override
   public Flux<FinancePositionEntity> getAllPositions(String externalIdentifier) {
@@ -51,20 +111,33 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     return Flux.fromIterable(financePositionEntityList)
         .flatMap(
             financePositionEntity ->
-                positionToPrice(financePositionEntity)
+                positionToValue(financePositionEntity)
                     .flatMap(
-                        priceDto -> {
-                          financePositionEntity.setValue(priceDto.getPrice());
+                        valueDto -> {
+                          financePositionEntity.setPrice(valueDto.getPrice());
+                          financePositionEntity.setCurrency(valueDto.getCurrency());
+                          if (!valueDto.getCurrency().equals(financePositionEntity.getCurrency())) {
+                            throw new IllegalStateException(
+                                "Entity currency and connector result currency differ");
+                          }
                           return just(financePositionEntity);
                         }));
   }
 
-  private Mono<PriceDto> positionToPrice(FinancePositionEntity position) {
-    return position.getType().isResolve()
-        ? connectorFacade
-            .getActualPrice(position.getIdentifier())
-            .map(priceDto -> new PriceDto(priceDto.getPrice().multiply(position.getAmount())))
-        : just(new PriceDto(position.getAmount()));
+  private Mono<ValueDto> positionToValue(FinancePositionEntity position) {
+    boolean resolvePosition = position.getType().isResolve();
+    if (resolvePosition) {
+      return connectorFacade
+          .getActualValue(position.getIdentifier())
+          .map(
+              valueDto -> {
+                String currency = ofNullable(valueDto.getCurrency()).orElse(position.getCurrency());
+                BigDecimal price = valueDto.getPrice().multiply(position.getAmount());
+                return new ValueDto(currency, price);
+              });
+    } else {
+      return just(new ValueDto(position.getCurrency(), position.getAmount()));
+    }
   }
 
   @Transactional
@@ -73,48 +146,17 @@ public class FinanceDataServiceImpl implements FinanceDataService {
       List<FinancePositionEntity> toAddFinancePositionEntityList, String externalIdentifier) {
     checkPositionsExist(toAddFinancePositionEntityList);
     UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
-    Map<String, FinancePositionEntity> existingFinancePositionEntityMap =
-        userAccountEntity
-            .getFinancePositionEntityList()
-            .stream()
-            .collect(Collectors.toMap(FinancePositionEntity::getIdentifier, entity -> entity));
-    mergeOrAddPositions(
-        userAccountEntity, toAddFinancePositionEntityList, existingFinancePositionEntityMap);
+    toAddFinancePositionEntityList.forEach(
+        financePositionEntity -> {
+          financePositionEntity.setUserAccount(userAccountEntity);
+          financePositionEntity.setExternalIdentifier(UUID.randomUUID().toString());
+          financePositionEntity.setCurrency(financePositionEntity.getCurrency().toUpperCase());
+          userAccountEntity.getFinancePositionEntityList().add(financePositionEntity);
+        });
+    updateCurrencies(userAccountEntity.getFinancePositionEntityList());
+    financePositionRepository.saveAll(toAddFinancePositionEntityList);
     userAccountRepository.save(userAccountEntity);
     return IteratorUtils.toList(toAddFinancePositionEntityList.iterator());
-  }
-
-  private void mergeOrAddPositions(
-      UserAccountEntity userAccountEntity,
-      List<FinancePositionEntity> toAddFinancePositionEntityList,
-      Map<String, FinancePositionEntity> existingFinancePositionEntityMap) {
-    toAddFinancePositionEntityList.forEach(
-        toAddFinancePositionEntity -> {
-          FinancePositionEntity existingFinancePositionEntity =
-              existingFinancePositionEntityMap.get(toAddFinancePositionEntity.getIdentifier());
-          if (isEqualPosition(toAddFinancePositionEntity, existingFinancePositionEntity)) {
-            existingFinancePositionEntity.setAmount(
-                existingFinancePositionEntity
-                    .getAmount()
-                    .add(toAddFinancePositionEntity.getAmount()));
-          } else {
-            toAddFinancePositionEntity.setExternalIdentifier(UUID.randomUUID().toString());
-            toAddFinancePositionEntity.setUserAccount(userAccountEntity);
-            toAddFinancePositionEntity.setCurrency(
-                toAddFinancePositionEntity.getCurrency().toUpperCase());
-            userAccountEntity.getFinancePositionEntityList().add(toAddFinancePositionEntity);
-          }
-        });
-  }
-
-  private boolean isEqualPosition(
-      FinancePositionEntity toAddFinancePositionEntity,
-      FinancePositionEntity existingFinancePositionEntity) {
-    return existingFinancePositionEntity != null
-        && existingFinancePositionEntity
-            .getCurrency()
-            .equals(toAddFinancePositionEntity.getCurrency())
-        && existingFinancePositionEntity.getType().equals(toAddFinancePositionEntity.getType());
   }
 
   @Transactional
@@ -131,10 +173,21 @@ public class FinanceDataServiceImpl implements FinanceDataService {
         });
     userAccountEntity.getFinancePositionEntityList().clear();
     userAccountEntity.getFinancePositionEntityList().addAll(financePositionEntityList);
-    Iterable<FinancePositionEntity> financePositionEntities =
-        financePositionRepository.saveAll(financePositionEntityList);
+    updateCurrencies(userAccountEntity.getFinancePositionEntityList());
+    financePositionRepository.saveAll(financePositionEntityList);
     userAccountRepository.save(userAccountEntity);
-    return IteratorUtils.toList(financePositionEntities.iterator());
+    return IteratorUtils.toList(userAccountEntity.getFinancePositionEntityList().iterator());
+  }
+
+  private void updateCurrencies(List<FinancePositionEntity> financePositionEntityList) {
+    financePositionEntityList.forEach(
+        financePositionEntity -> {
+          if (financePositionEntity.getType().isResolve()) {
+            String resolvedCurrency =
+                connectorFacade.getCurrency(financePositionEntity.getIdentifier());
+            financePositionEntity.setCurrency(resolvedCurrency.toUpperCase());
+          }
+        });
   }
 
   @Transactional
@@ -149,13 +202,6 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     return null;
   }
 
-  private void checkPositionsExist(List<FinancePositionEntity> financePositionEntityList) {
-    financePositionEntityList
-        .stream()
-        .map(FinancePositionEntity::getIdentifier)
-        .forEach(connectorFacade::checkPositionExists);
-  }
-
   private UserAccountEntity getUserAccountEntity(String externalIdentifier) {
     return userAccountRepository
         .findByExternalIdentifier(externalIdentifier)
@@ -167,65 +213,10 @@ public class FinanceDataServiceImpl implements FinanceDataService {
                         "Could not find user with externalIdentifier '%s'", externalIdentifier)));
   }
 
-  private Mono<FinanceTotalDto> getFinanceTotalDtoInternal(
-      String externalIdentifier, String currency) {
-    return this.getAllPositions(externalIdentifier)
-        .flatMap(el -> positionToCurrencyValue(el, currency))
-        .map(el -> el.getValueDto().getValue())
-        .reduceWith(() -> BigDecimal.ZERO, BigDecimal::add)
-        .map(el -> new FinanceTotalDto(currency, el, null));
-  }
-
-  private Mono<FinanceTotalDto> getFinanceTotalDtoInternalByType(
-      String externalIdentifier, String currency) {
-    return this.getAllPositions(externalIdentifier)
-        .flatMap(el -> positionToCurrencyValue(el, currency))
-        .collectList()
-        .map(this::buildPositionTypeMap)
-        .map(el -> this.buildFinanceTotalDto(el, currency));
-  }
-
-  private FinanceTotalDto buildFinanceTotalDto(
-      Map<PositionType, BigDecimal> positionTypeValueDtoMap, String currency) {
-    BigDecimal total =
-        positionTypeValueDtoMap.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-    return new FinanceTotalDto(currency, total, positionTypeValueDtoMap);
-  }
-
-  private Mono<ValueWithTypeDto> positionToCurrencyValue(
-      FinancePositionEntity position, String currency) {
-    PriceDto priceDto = new PriceDto(position.getValue());
-    Mono<ValueDto> valueDto =
-        position.getCurrency().equals(currency)
-            ? just(new ValueDto(currency, priceDto.getPrice()))
-            : this.exchangeToCurrency(priceDto, position.getCurrency(), currency);
-    return valueDto.map(el -> new ValueWithTypeDto(el, position.getType()));
-  }
-
-  private Mono<ValueDto> exchangeToCurrency(
-      PriceDto priceDto, String fromCurrency, String toCurrency) {
-    return connectorFacade
-        .convertToCurrency(fromCurrency, toCurrency)
-        .map(
-            exchangePriceDto -> priceDto.getPrice().multiply(exchangePriceDto.getPriceNotRounded()))
-        .map(value -> new ValueDto(toCurrency, value));
-  }
-
-  private Map<PositionType, BigDecimal> buildPositionTypeMap(
-      Collection<ValueWithTypeDto> valueWithTypeDtoCollection) {
-    Map<PositionType, BigDecimal> result = new HashMap<>();
-    valueWithTypeDtoCollection.forEach(
-        el -> {
-          if (result.containsKey(el.getPositionType())) {
-            BigDecimal mapEntry = result.get(el.getPositionType());
-            BigDecimal value = el.getValueDto().getValueUnrounded();
-            BigDecimal newMapEntry = mapEntry.add(value);
-            result.put(el.getPositionType(), newMapEntry);
-          } else {
-            BigDecimal value = el.getValueDto().getValueUnrounded();
-            result.put(el.getPositionType(), value == null ? BigDecimal.ZERO : value);
-          }
-        });
-    return result;
+  private void checkPositionsExist(List<FinancePositionEntity> financePositionEntityList) {
+    financePositionEntityList
+        .stream()
+        .map(FinancePositionEntity::getIdentifier)
+        .forEach(connectorFacade::checkPositionExists);
   }
 }

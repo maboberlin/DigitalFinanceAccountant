@@ -4,12 +4,12 @@ import de.bitsandbooks.finance.connectors.AbstractFinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ConnectorType;
 import de.bitsandbooks.finance.connectors.FinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ForexService;
-import de.bitsandbooks.finance.connectors.helpers.RoundHelper;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Chart;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Meta;
 import de.bitsandbooks.finance.connectors.yahoo.dto.Result;
 import de.bitsandbooks.finance.connectors.yahoo.dto.YahooChartDto;
-import de.bitsandbooks.finance.model.dtos.PriceDto;
+import de.bitsandbooks.finance.model.dtos.ExchangeRateDto;
+import de.bitsandbooks.finance.model.dtos.ValueDto;
 import java.math.BigDecimal;
 import java.util.Optional;
 import lombok.NonNull;
@@ -34,19 +34,44 @@ public class YahooConnector extends AbstractFinanceDataConnector
   }
 
   @Override
-  public Mono<PriceDto> getActualPrice(String identifier) {
+  public Mono<ValueDto> getActualValue(String identifier) {
     log.info(
         "Get actual quote price with '{}' API for identifier: {}",
         this.getConnectorType(),
         identifier);
     return yahooApi
         .getQuote(identifier)
-        .map(yahooChartDto -> this.getRegularMarketPrice(identifier, yahooChartDto))
-        .map(price -> new PriceDto(new BigDecimal(price)));
+        .map(
+            yahooChartDto -> {
+              Double price = this.getRegularMarketPrice(identifier, yahooChartDto);
+              String currency = this.getCurrency(identifier, yahooChartDto);
+              return new ValueDto(currency, new BigDecimal(price));
+            });
   }
 
   @Override
-  public Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency) {
+  public Mono<Boolean> hasActualValue(String identifier) {
+    return yahooApi
+        .getQuote(identifier)
+        .map(
+            yahooChartDto ->
+                Optional.ofNullable(yahooChartDto)
+                    .map(YahooChartDto::getChart)
+                    .map(Chart::getResult)
+                    .map(result -> !result.isEmpty())
+                    .filter(Boolean::booleanValue)
+                    .isPresent());
+  }
+
+  @Override
+  public Mono<String> getCurrency(String identifier) {
+    return yahooApi
+        .getQuote(identifier)
+        .map(yahooChartDto -> this.getCurrency(identifier, yahooChartDto));
+  }
+
+  @Override
+  public Mono<ExchangeRateDto> convertToCurrency(String fromCurrency, String toCurrency) {
     log.info(
         "Get actual currency price with '{}' API from currency '{}' to currency '{}'",
         this.getConnectorType(),
@@ -57,7 +82,7 @@ public class YahooConnector extends AbstractFinanceDataConnector
         .map(
             yahooChartDto ->
                 getRegularMarketPrice(fromCurrency + " -> " + toCurrency, yahooChartDto))
-        .map(price -> new PriceDto(new BigDecimal(price)));
+        .map(price -> new ExchangeRateDto(toCurrency, new BigDecimal(price)));
   }
 
   private Double getRegularMarketPrice(String identifier, YahooChartDto yahooChartDto) {
@@ -67,10 +92,24 @@ public class YahooConnector extends AbstractFinanceDataConnector
         .map(list -> list.isEmpty() ? null : list.get(0))
         .map(Result::getMeta)
         .map(Meta::getRegularMarketPrice)
-        .map(RoundHelper::roundUpHalfDouble)
         .orElseThrow(
             () ->
                 new IllegalStateException(
-                    "Yahoo API returned quote with missing data for identifier: " + identifier));
+                    "Yahoo API returned quote with missing price data for identifier: "
+                        + identifier));
+  }
+
+  private String getCurrency(String identifier, YahooChartDto yahooChartDto) {
+    return Optional.ofNullable(yahooChartDto)
+        .map(YahooChartDto::getChart)
+        .map(Chart::getResult)
+        .map(list -> list.isEmpty() ? null : list.get(0))
+        .map(Result::getMeta)
+        .map(Meta::getCurrency)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Yahoo API returned quote with missing currency data for identifier: "
+                        + identifier));
   }
 }

@@ -1,9 +1,9 @@
 package de.bitsandbooks.finance.connectors;
 
-import de.bitsandbooks.finance.model.dtos.PriceDto;
+import de.bitsandbooks.finance.model.dtos.ExchangeRateDto;
 import reactor.core.publisher.Mono;
 
 public interface ForexService {
 
-  Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency);
+  Mono<ExchangeRateDto> convertToCurrency(String fromCurrency, String toCurrency);
 }

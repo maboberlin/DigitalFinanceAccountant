@@ -7,8 +7,8 @@ import de.bitsandbooks.finance.connectors.ForexService;
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageCurrencyDto;
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageQuoteDto;
 import de.bitsandbooks.finance.connectors.alphavantage.dto.AlphaVantageTimeSeriesDailyAdjustedDto;
-import de.bitsandbooks.finance.connectors.helpers.RoundHelper;
-import de.bitsandbooks.finance.model.dtos.PriceDto;
+import de.bitsandbooks.finance.model.dtos.ExchangeRateDto;
+import de.bitsandbooks.finance.model.dtos.ValueDto;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.Map;
@@ -26,6 +26,8 @@ import reactor.core.publisher.Mono;
 public class AlphaVantageConnector extends AbstractFinanceDataConnector
     implements FinanceDataConnector, ForexService {
 
+  private static final String DEFAULT_ALPHAVANTAGE_CURRENCY = "USD";
+
   @NonNull private final AlphaVantageApi alphaVantageApi;
 
   @Override
@@ -34,42 +36,38 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
   }
 
   @Override
-  public Mono<PriceDto> getActualPrice(String identifier) {
+  public Mono<ValueDto> getActualValue(String identifier) {
     log.info(
         "Get actual quote price with '{}' API for identifier: {}",
         this.getConnectorType(),
         identifier);
-    return getLastDailyPriceFromQuote(identifier);
+    return getLastDailyPriceFromQuote(identifier)
+        .map(price -> new ValueDto(DEFAULT_ALPHAVANTAGE_CURRENCY, price));
   }
 
-  private Mono<PriceDto> getLastDailyPriceFromQuote(String identifier) {
+  private Mono<BigDecimal> getLastDailyPriceFromQuote(String identifier) {
     return alphaVantageApi
         .getQuote(identifier)
         .map(AlphaVantageQuoteDto::getGlobalQuote)
         .map(AlphaVantageQuoteDto.GlobalQuote::get_05Price)
         .map(BigDecimal::new)
-        .map(RoundHelper::roundUpHalfBigDecimalDouble)
         .switchIfEmpty(
             Mono.error(
                 () ->
                     new IllegalStateException(
                         "AlphaVantage API returned quote with missing daily price data for identifier: "
-                            + identifier)))
-        .map(PriceDto::new);
+                            + identifier)));
   }
 
-  private Mono<PriceDto> getLastDailyPriceFromDailyAdjusted(String identifier) {
+  private Mono<BigDecimal> getLastDailyPriceFromDailyAdjusted(String identifier) {
     return alphaVantageApi
         .getTimeSeriesDailyAdjusted(identifier)
         .map(el -> getMostActualDayData(identifier, el))
-        .map(
-            el ->
-                new PriceDto(
-                    RoundHelper.roundUpHalfBigDecimalDouble(new BigDecimal(el.get_4Close()))));
+        .map(el -> new BigDecimal(el.get_4Close()));
   }
 
   @Override
-  public Mono<PriceDto> convertToCurrency(String fromCurrency, String toCurrency) {
+  public Mono<ExchangeRateDto> convertToCurrency(String fromCurrency, String toCurrency) {
     log.info(
         "Get actual currency price with '{}' API from currency '{}' to currency '{}'",
         this.getConnectorType(),
@@ -79,7 +77,6 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
         .getCurrencyExchange(fromCurrency, toCurrency)
         .map(AlphaVantageCurrencyDto::getCurrencyData)
         .map(AlphaVantageCurrencyDto.CurrencyData::get_5ExchangeRate)
-        .map(RoundHelper::roundUpHalfBigDecimalDouble)
         .switchIfEmpty(
             Mono.error(
                 () ->
@@ -88,7 +85,7 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
                             + fromCurrency
                             + " -> "
                             + toCurrency)))
-        .map(PriceDto::new);
+        .map(price -> new ExchangeRateDto(toCurrency, price));
   }
 
   private AlphaVantageTimeSeriesDailyAdjustedDto.DailyData getMostActualDayData(
@@ -111,5 +108,20 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
   private Comparator<? super Map.Entry<String, AlphaVantageTimeSeriesDailyAdjustedDto.DailyData>>
       compareByDateComparator() {
     return Map.Entry.comparingByKey(Comparator.reverseOrder());
+  }
+
+  @Override
+  public Mono<Boolean> hasActualValue(String identifier) {
+    return alphaVantageApi
+        .getQuote(identifier)
+        .map(AlphaVantageQuoteDto::getGlobalQuote)
+        .map(AlphaVantageQuoteDto.GlobalQuote::get_05Price)
+        .map(s -> Boolean.TRUE)
+        .switchIfEmpty(Mono.just(Boolean.FALSE));
+  }
+
+  @Override
+  public Mono<String> getCurrency(String identifier) {
+    return Mono.just(DEFAULT_ALPHAVANTAGE_CURRENCY);
   }
 }
