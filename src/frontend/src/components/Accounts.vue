@@ -14,7 +14,7 @@
 
             <td v-if="account.isEdit === true"><input type="text" v-model="account.accountIdentifier"></td>
 
-            <td v-if="account.isEdit === false"><button class="button btn-primary" @click="openAccount(account.externalIdentifier)">Open</button></td>
+            <td v-if="account.isEdit === false"><button class="button btn-primary" @click="openAccount(account.externalIdentifier, account.accountIdentifier)">Open</button></td>
 
             <td v-if="account.isEdit === false"><button class="button btn-primary" @click="deleteAccount(account.externalIdentifier)">Delete</button></td>
         </tr>
@@ -53,7 +53,8 @@ export default {
     createAccount: function(){
       this.$store.dispatch('user/createAccount', this.currentUser);
     },
-    openAccount: function(externalIdentifier) {
+    openAccount: function(externalIdentifier, identifier) {
+      this.$store.dispatch('setCurrentAccount', identifier);
       this.$router.push('/assets/' + externalIdentifier);
     },
     deleteAccount: function(externalIdentifier){

@@ -16,4 +16,8 @@ public class ValueDto {
   public BigDecimal getValue() {
     return RoundHelper.roundUpHalfBigDecimalDouble(this.value);
   }
+
+  public BigDecimal getValueUnrounded() {
+    return this.value;
+  }
 }

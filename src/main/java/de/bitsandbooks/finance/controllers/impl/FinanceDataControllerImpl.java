@@ -57,10 +57,7 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
       @NotEmpty @PathVariable("userAccountExternalIdentifier")
           String userAccountExternalIdentifier) {
     log.info("Getting all positions for user '{}'", userAccountExternalIdentifier);
-    return Mono.fromCallable(
-            () -> financeDataService.getAllPositions(userAccountExternalIdentifier))
-        .subscribeOn(Schedulers.boundedElastic())
-        .flatMapMany(Flux::fromIterable);
+    return financeDataService.getAllPositions(userAccountExternalIdentifier);
   }
 
   @Override

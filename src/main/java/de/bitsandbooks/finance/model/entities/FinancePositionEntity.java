@@ -45,6 +45,8 @@ public class FinancePositionEntity {
 
   @NotNull private PositionType type;
 
+  @Transient private BigDecimal value;
+
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)
   private UserAccountEntity userAccount;

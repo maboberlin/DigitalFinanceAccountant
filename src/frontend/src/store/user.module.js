@@ -49,6 +49,9 @@ export const user = {
   },
 
   mutations: {
+    openAccount(state, externalIdentifier) {
+      state.selectedAccount = externalIdentifier;
+    },
     setAccounts(state, accounts) {
       state.accounts = accounts.map(item => ({...item, isEdit: false}));
       state.accounts.push({accountIdentifier:"",isEdit: true});

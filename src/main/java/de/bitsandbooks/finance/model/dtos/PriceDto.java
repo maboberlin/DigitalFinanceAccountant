@@ -15,4 +15,8 @@ public class PriceDto {
   public BigDecimal getPrice() {
     return RoundHelper.roundUpHalfBigDecimalDouble(this.price);
   }
+
+  public BigDecimal getPriceNotRounded() {
+    return this.price;
+  }
 }

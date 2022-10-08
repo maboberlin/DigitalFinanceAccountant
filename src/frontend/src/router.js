@@ -37,6 +37,11 @@ const routes = [
     name: "user",
     component: User,
   },
+{
+  path: "/logout",
+  name: "logout",
+  component: Login,
+},
 ];
 const router = createRouter({
   history: createWebHistory(),

@@ -4,13 +4,23 @@ import authHeader from '../services/auth-header';
 export const positions = {
   state: {
     total: {},
-    positions: []
+    positions: [],
+    selectedCurrency: 'EUR',
+    selectedAccount: null
   },
   getters: {
     total: state => state.total,
-    positions: state => state.positions
+    positions: state => state.positions,
+    selectedCurrency: state => state.selectedCurrency,
+    selectedAccount: state => state.selectedAccount,
   },
   mutations: {
+    SET_CURRENT_ACCOUNT (state, currentAccount) {
+        state.selectedAccount = currentAccount;
+    },
+    SET_TOTAL_CURRENCY (state, currency) {
+        state.selectedCurrency = currency;
+    },
     SET_TOTAL (state, total) {
         state.total = total;
     },
@@ -28,8 +38,17 @@ export const positions = {
     },
   },
   actions: {
-    loadTotal ({commit}, accountExternalIdentifier) {
-      const path = `/api/finance/total/${accountExternalIdentifier}?currency=EUR&byType=true`
+    setCurrentAccount({ commit }, currentAccount) {
+      commit('SET_CURRENT_ACCOUNT', currentAccount);
+    },
+
+    setTotalCurrency ({commit}, accountExternalIdentifierWithCurrency) {
+        commit('SET_TOTAL_CURRENCY', accountExternalIdentifierWithCurrency.currency);
+        this.dispatch('loadTotal', { accountId: accountExternalIdentifierWithCurrency.accountId, currency: accountExternalIdentifierWithCurrency.currency });
+    },
+
+    loadTotal ({commit}, accountExternalIdentifierWithCurrency) {
+      const path = `/api/finance/total/${accountExternalIdentifierWithCurrency.accountId}?currency=${accountExternalIdentifierWithCurrency.currency}&byType=true`
       axios.get(
         path, { headers: authHeader() }
       ).then((response) => {
@@ -68,15 +87,16 @@ export const positions = {
       });
     },
 
-    addPosition ({commit}, accountExternalIdentifier) {
-      const path = `/api/finance/positions/${accountExternalIdentifier}`;
+    addPosition ({commit}, accountExternalIdentifierWithCurrency) {
+      const path = `/api/finance/positions/${accountExternalIdentifierWithCurrency.accountId}`;
       var positionContent = [this.getters.positions[this.getters.positions.length - 1]];
       axios.post(
         path, positionContent, { headers: authHeader() }
       ).then((response) => {
         const json = response.data;
         commit('ADD_POSITION', json[0].externalIdentifier);
-        this.dispatch('loadTotal', accountExternalIdentifier);
+        this.dispatch('loadTotal', accountExternalIdentifierWithCurrency);
+        this.dispatch('loadPositions', accountExternalIdentifierWithCurrency.accountId);
       }).catch(function (error) {
         if (error.response) {
           console.log(error.response.data);
@@ -90,13 +110,13 @@ export const positions = {
       });
     },
 
-    removePosition ({commit}, accountIdWithPositionId) {
-      const path = `/api/finance/positions/${accountIdWithPositionId.accountId}/${accountIdWithPositionId.positionId}`;
+    removePosition ({commit}, accountExternalIdentifierWithCurrencyWithPosition) {
+      const path = `/api/finance/positions/${accountExternalIdentifierWithCurrencyWithPosition.accountId}/${accountExternalIdentifierWithCurrencyWithPosition.positionId}`;
       axios.delete(
         path, { headers: authHeader() }
       ).then(() => {
-        commit('DELETE_POSITION', accountIdWithPositionId.positionId);
-        this.dispatch('loadTotal', accountIdWithPositionId.accountId);
+        commit('DELETE_POSITION', accountExternalIdentifierWithCurrencyWithPosition.positionId);
+        this.dispatch('loadTotal', { accountId: accountExternalIdentifierWithCurrencyWithPosition.accountId, currency: accountExternalIdentifierWithCurrencyWithPosition.currency });
       }).catch(function (error) {
         if (error.response) {
           console.log(error.response.data);
