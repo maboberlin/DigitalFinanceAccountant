@@ -10,6 +10,8 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import de.bitsandbooks.finance.model.entities.Currency;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -42,23 +44,29 @@ public class ConnectorFacade {
 
   @Cacheable(value = CacheConfiguration.CURRENCY_CACHE, unless = "#result == null")
   public String getCurrency(String identifier) {
-    CompletableFuture<FinanceDataConnector> connector = getConnector(identifier);
-    try {
-      return connector
-          .get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-          .getCurrency(identifier)
-          .block(Duration.ofSeconds(TIMEOUT_SECONDS));
-    } catch (Exception e) {
-      throw buildNotFoundException(identifier);
+    if (Currency.isCurrency(identifier)) {
+      return identifier;
+    } else {
+      CompletableFuture<FinanceDataConnector> connector = getConnector(identifier);
+      try {
+        return connector
+                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .getCurrency(identifier)
+                .block(Duration.ofSeconds(TIMEOUT_SECONDS));
+      } catch (Exception e) {
+        throw buildNotFoundException(identifier);
+      }
     }
   }
 
   public void checkPositionExists(String identifier) {
-    CompletableFuture<FinanceDataConnector> connector = getConnector(identifier);
-    try {
-      connector.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    } catch (Exception e) {
-      throw buildNotFoundException(identifier);
+    if (!Currency.isCurrency(identifier)) {
+      CompletableFuture<FinanceDataConnector> connector = getConnector(identifier);
+      try {
+        connector.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      } catch (Exception e) {
+        throw buildNotFoundException(identifier);
+      }
     }
   }
 

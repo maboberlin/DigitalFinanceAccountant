@@ -6,6 +6,7 @@ import static reactor.core.publisher.Mono.just;
 import de.bitsandbooks.finance.connectors.ConnectorFacade;
 import de.bitsandbooks.finance.exceptions.EntityNotFoundException;
 import de.bitsandbooks.finance.model.dtos.*;
+import de.bitsandbooks.finance.model.entities.Currency;
 import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
 import de.bitsandbooks.finance.model.entities.UserAccountEntity;
 import de.bitsandbooks.finance.repositories.FinancePositionRepository;
@@ -125,8 +126,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   }
 
   private Mono<ValueDto> positionToValue(FinancePositionEntity position) {
-    boolean resolvePosition = position.getType().isResolve();
-    if (resolvePosition) {
+    boolean isCurrency = Currency.isCurrency(position.getIdentifier());
+    if (!isCurrency) {
       return connectorFacade
           .getActualValue(position.getIdentifier())
           .map(
@@ -182,7 +183,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   private void updateCurrencies(List<FinancePositionEntity> financePositionEntityList) {
     financePositionEntityList.forEach(
         financePositionEntity -> {
-          if (financePositionEntity.getType().isResolve()) {
+          boolean isCurrency = Currency.isCurrency(financePositionEntity.getIdentifier());
+          if (!isCurrency) {
             String resolvedCurrency =
                 connectorFacade.getCurrency(financePositionEntity.getIdentifier());
             financePositionEntity.setCurrency(resolvedCurrency.toUpperCase());

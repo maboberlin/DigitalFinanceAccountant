@@ -16,10 +16,7 @@ import org.hibernate.annotations.GenericGenerator;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Table(
-  uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"accountIdentifier"}),
-    @UniqueConstraint(columnNames = {"externalIdentifier"})
-  }
+  uniqueConstraints = {@UniqueConstraint(columnNames = {"accountIdentifier", "externalIdentifier"})}
 )
 public class UserAccountEntity {
 
