@@ -4,6 +4,7 @@ import de.bitsandbooks.finance.controllers.FinanceDataControllerInterface;
 import de.bitsandbooks.finance.model.dtos.FinanceTotalDto;
 import de.bitsandbooks.finance.model.entities.FinancePositionEntity;
 import de.bitsandbooks.finance.services.FinanceDataService;
+import java.util.Comparator;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -57,7 +58,9 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
       @NotEmpty @PathVariable("userAccountExternalIdentifier")
           String userAccountExternalIdentifier) {
     log.info("Getting all positions for user '{}'", userAccountExternalIdentifier);
-    return financeDataService.getAllPositions(userAccountExternalIdentifier);
+    return financeDataService
+        .getAllPositions(userAccountExternalIdentifier)
+        .sort(Comparator.comparing(FinancePositionEntity::getName));
   }
 
   @Override
