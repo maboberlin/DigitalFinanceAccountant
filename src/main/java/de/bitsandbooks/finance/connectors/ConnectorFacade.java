@@ -6,12 +6,11 @@ import de.bitsandbooks.finance.connectors.helpers.ForexServiceSearcher;
 import de.bitsandbooks.finance.exceptions.PositionsNotExistingException;
 import de.bitsandbooks.finance.model.dtos.ExchangeRateDto;
 import de.bitsandbooks.finance.model.dtos.ValueDto;
+import de.bitsandbooks.finance.model.entities.Currency;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import de.bitsandbooks.finance.model.entities.Currency;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -50,9 +49,9 @@ public class ConnectorFacade {
       CompletableFuture<FinanceDataConnector> connector = getConnector(identifier);
       try {
         return connector
-                .get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .getCurrency(identifier)
-                .block(Duration.ofSeconds(TIMEOUT_SECONDS));
+            .get(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .getCurrency(identifier)
+            .block(Duration.ofSeconds(TIMEOUT_SECONDS));
       } catch (Exception e) {
         throw buildNotFoundException(identifier);
       }

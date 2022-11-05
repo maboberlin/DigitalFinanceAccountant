@@ -126,4 +126,25 @@ public class FinanceDataControllerImpl implements FinanceDataControllerInterface
                     userAccountExternalIdentifier, positionExternalIdentifier))
         .subscribeOn(Schedulers.boundedElastic());
   }
+
+  @Override
+  @PreAuthorize(
+      "hasPermission(#userAccountExternalIdentifier, 'EXTERNAL_ACCOUNT_IDENTIFIER', 'write')")
+  @RequestMapping(
+    value = "/positions/{userAccountExternalIdentifier}/{positionExternalIdentifier}",
+    method = RequestMethod.PUT,
+    produces = "application/json"
+  )
+  @ResponseStatus(HttpStatus.OK)
+  public Mono<FinancePositionEntity> putPosition(
+      @Valid @NotNull @RequestBody FinancePositionEntity financePositionEntity,
+      @NotEmpty @PathVariable("userAccountExternalIdentifier") String userAccountExternalIdentifier,
+      @NotEmpty @PathVariable("positionExternalIdentifier") String positionExternalIdentifier) {
+    log.info(
+        "Update position '{}' for user '{}'",
+        positionExternalIdentifier,
+        userAccountExternalIdentifier);
+    return financeDataService.putPosition(
+        financePositionEntity, userAccountExternalIdentifier, positionExternalIdentifier);
+  }
 }

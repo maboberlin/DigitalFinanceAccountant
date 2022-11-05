@@ -114,15 +114,18 @@ public class FinanceDataServiceImpl implements FinanceDataService {
             financePositionEntity ->
                 positionToValue(financePositionEntity)
                     .flatMap(
-                        valueDto -> {
-                          financePositionEntity.setPrice(valueDto.getPrice());
-                          financePositionEntity.setCurrency(valueDto.getCurrency());
-                          if (!valueDto.getCurrency().equals(financePositionEntity.getCurrency())) {
-                            throw new IllegalStateException(
-                                "Entity currency and connector result currency differ");
-                          }
-                          return just(financePositionEntity);
-                        }));
+                        valueDto ->
+                            addValuesToFinancePositionEntity(financePositionEntity, valueDto)));
+  }
+
+  private Mono<? extends FinancePositionEntity> addValuesToFinancePositionEntity(
+      FinancePositionEntity financePositionEntity, ValueDto valueDto) {
+    financePositionEntity.setPrice(valueDto.getPrice());
+    financePositionEntity.setCurrency(valueDto.getCurrency());
+    if (!valueDto.getCurrency().equals(financePositionEntity.getCurrency())) {
+      throw new IllegalStateException("Entity currency and connector result currency differ");
+    }
+    return just(financePositionEntity);
   }
 
   private Mono<ValueDto> positionToValue(FinancePositionEntity position) {
@@ -202,6 +205,46 @@ public class FinanceDataServiceImpl implements FinanceDataService {
           positionExternalIdentifier);
     }
     return null;
+  }
+
+  @Transactional
+  @Override
+  public Mono<FinancePositionEntity> putPosition(
+      FinancePositionEntity financePositionEntity,
+      String userAccountExternalIdentifier,
+      String positionExternalIdentifier) {
+    FinancePositionEntity existingFinancePositionEntity =
+        financePositionRepository
+            .findByExternalIdentifier(positionExternalIdentifier)
+            .orElseThrow(
+                () ->
+                    new EntityNotFoundException(
+                        FinancePositionEntity.class.getName(),
+                        String.format(
+                            "Could not find finance position with externalIdentifier '%s'",
+                            positionExternalIdentifier)));
+    updatePositionValues(financePositionEntity, existingFinancePositionEntity);
+    FinancePositionEntity savedFinancePositionEntity =
+        financePositionRepository.save(existingFinancePositionEntity);
+    return positionToValue(savedFinancePositionEntity)
+        .flatMap(valueDto -> addValuesToFinancePositionEntity(financePositionEntity, valueDto));
+  }
+
+  private void updatePositionValues(
+      FinancePositionEntity financePositionEntity,
+      FinancePositionEntity existingFinancePositionEntity) {
+    if (!financePositionEntity.getType().equals(existingFinancePositionEntity.getType())) {
+      existingFinancePositionEntity.setType(financePositionEntity.getType());
+    }
+    if (!financePositionEntity.getName().equals(existingFinancePositionEntity.getName())) {
+      existingFinancePositionEntity.setName(financePositionEntity.getName());
+    }
+    if (!financePositionEntity.getCurrency().equals(existingFinancePositionEntity.getCurrency())) {
+      existingFinancePositionEntity.setCurrency(financePositionEntity.getCurrency());
+    }
+    if (!financePositionEntity.getAmount().equals(existingFinancePositionEntity.getAmount())) {
+      existingFinancePositionEntity.setAmount(financePositionEntity.getAmount());
+    }
   }
 
   private UserAccountEntity getUserAccountEntity(String externalIdentifier) {

@@ -26,4 +26,9 @@ public interface FinanceDataControllerInterface {
 
   Mono<Void> deletePosition(
       @NotEmpty String userExternalIdentifier, @NotEmpty String positionExternalIdentifier);
+
+  Mono<FinancePositionEntity> putPosition(
+      @Valid @NotNull FinancePositionEntity financePositionEntity,
+      @NotEmpty String userExternalIdentifier,
+      @NotEmpty String positionExternalIdentifier);
 }

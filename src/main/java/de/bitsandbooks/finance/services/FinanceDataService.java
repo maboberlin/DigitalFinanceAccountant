@@ -18,4 +18,9 @@ public interface FinanceDataService {
       List<FinancePositionEntity> positionDtoList, String userAccountId);
 
   Void deletePosition(String userExternalIdentifier, String positionExternalIdentifier);
+
+  Mono<FinancePositionEntity> putPosition(
+      FinancePositionEntity financePositionEntity,
+      String userAccountExternalIdentifier,
+      String positionExternalIdentifier);
 }

@@ -25,8 +25,8 @@ export const positions = {
         state.total = total;
     },
     SET_POSITIONS (state, positions) {
-        state.positions = positions.map(item => ({...item, isEdit: false}));
-        state.positions.push({identifier:"",name:"",amount:"",isEdit: true});
+        state.positions = positions.map(item => ({...item, isEdit: false, isAmountEdit: false, isNameEdit: false}));
+        state.positions.push({identifier:"",name:"",amount:"", isEdit: true, isAmountEdit: false, isNameEdit: false});
     },
     ADD_POSITION (state, externalIdentifier) {
         state.positions[state.positions.length - 1].isEdit = false
@@ -35,6 +35,16 @@ export const positions = {
     },
     DELETE_POSITION (state, externalIdentifier) {
         state.positions.splice(state.positions.findIndex(e => e.externalIdentifier === externalIdentifier),1);
+    },
+    UPDATE_POSITION (state, position) {
+        var ix = state.positions.findIndex(e => e.externalIdentifier === position.externalIdentifier);
+        if (~ix) {
+            state.positions[ix].amount = position.amount;
+            state.positions[ix].currency = position.currency;
+            state.positions[ix].name = position.name;
+            state.positions[ix].price = position.price;
+            state.positions[ix].type = position.type;
+        }
     },
   },
   actions: {
@@ -128,7 +138,30 @@ export const positions = {
           console.log('Error', error.message);
         }
       });
-    }
+    },
+
+    updatePosition({commit}, accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson) {
+      const path = `/api/finance/positions/${accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson.accountId}/${accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson.positionId}`;
+      var positionContent = accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson.positionJson;
+      axios.put(
+        path, positionContent, { headers: authHeader() }
+      ).then((response) => {
+        const json = response.data;
+        commit('UPDATE_POSITION', json);
+        this.dispatch('loadTotal', { accountId: accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson.accountId, currency: accountExternalIdentifierWithCurrencyWithPositionIdentifierAndPositionJson.currency });
+      }).catch(function (error) {
+        if (error.response) {
+          console.log(error.response.data);
+          console.log(error.response.status);
+          console.log(error.response.headers);
+        } else if (error.request) {
+          console.log(error.request);
+        } else {
+          console.log('Error', error.message);
+        }
+      });
+    },
+
   }
 }
 

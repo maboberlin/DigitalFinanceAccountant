@@ -43,17 +43,23 @@
         <tbody>
         <tr v-for="position in positions" v-bind:key='position.externalIdentifier'>
             <td v-if="position.isEdit === false">{{ position.identifier }}</td>
-            <td v-if="position.isEdit === false">{{ position.name }}</td>
-            <td v-if="position.isEdit === false">{{ position.amount }}</td>
-            <td v-if="position.isEdit === false">{{ position.price }}</td>
-            <td v-if="position.isEdit === false">{{ position.currency }}</td>
-            <td v-if="position.isEdit === false">{{ position.type }}</td>
-
             <td v-if="position.isEdit === true"><input type="text" v-model="position.identifier"></td>
+
+            <td v-if="position.isEdit === false && position.isNameEdit === false" @click="toggleEditName(position)">{{ position.name }}</td>
+            <td v-if="position.isEdit === false && position.isNameEdit === true"  v-on:keyup.enter="toggleEditName(position)" @change="updatePosition(position)"><input type="text" v-model="position.name"></td>
             <td v-if="position.isEdit === true"><input type="text" v-model="position.name"></td>
+
+            <td v-if="position.isEdit === false && position.isAmountEdit === false" @click="toggleEditAmount(position)">{{ position.amount }}</td>
+            <td v-if="position.isEdit === false && position.isAmountEdit === true"  v-on:keyup.enter="toggleEditAmount(position)" @change="updatePosition(position)"><input type="text" v-model="position.amount"></td>
             <td v-if="position.isEdit === true"><input type="text" v-model="position.amount"></td>
+
+            <td v-if="position.isEdit === false">{{ position.price }}</td>
             <td v-if="position.isEdit === true"></td>
+
+            <td v-if="position.isEdit === false">{{ position.currency }}</td>
             <td v-if="position.isEdit === true"><input type="text" v-model="position.currency"></td>
+
+            <td v-if="position.isEdit === false">{{ position.type }}</td>
             <td v-if="position.isEdit === true">
                 <select v-model="position.type">
                     <option value="STOCK">Stock</option>
@@ -64,6 +70,7 @@
                     <option value="REAL_ESTATE">Real Estate</option>
                 </select>
             </td>
+
             <td v-if="position.isEdit === false"><button class="button btn-primary" @click="removePosition(position.externalIdentifier)">Remove</button></td>
         </tr>
         </tbody>
@@ -77,7 +84,7 @@
 export default {
   data() {
     return {
-        tableHeaders: ['Symbol','Name','Amount','Price','Currency', 'Type'],
+        tableHeaders: ['Symbol','Name','Amount','Price','Currency', 'Type']
     }
   },
   name: 'Assets',
@@ -108,6 +115,15 @@ export default {
     },
     totalCurrencyChange: function(event){
        this.$store.dispatch('setTotalCurrency', { accountId: this.$route.params.accountExternalIdentifier, currency: event.target.value });
+    },
+    updatePosition: function(position){
+       this.$store.dispatch('updatePosition', { accountId: this.$route.params.accountExternalIdentifier, positionId: position.externalIdentifier, positionJson: position, currency: this.$store.getters.selectedCurrency })
+    },
+    toggleEditAmount: function(position){
+        position.isAmountEdit = ( position.isAmountEdit == true) ? false : true
+    },
+    toggleEditName: function(position){
+        position.isNameEdit = ( position.isNameEdit == true) ? false : true
     }
   },
 
