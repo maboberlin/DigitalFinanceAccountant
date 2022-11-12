@@ -57,7 +57,7 @@
             <td v-if="position.isEdit === true"></td>
 
             <td v-if="position.isEdit === false">{{ position.currency }}</td>
-            <td v-if="position.isEdit === true"><input type="text" v-model="position.currency"></td>
+            <td v-if="position.isEdit === true"></td>
 
             <td v-if="position.isEdit === false">{{ position.type }}</td>
             <td v-if="position.isEdit === true">

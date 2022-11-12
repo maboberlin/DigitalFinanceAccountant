@@ -18,8 +18,6 @@ public class CacheConfiguration {
 
   public static final String CURRENCY_EXCHANGE_CACHE = "currencyExchange";
   public static final String QUOTE_CACHE = "quoteCache";
-  public static final String CONNECTOR_CACHE = "connectorCache";
-  public static final String CURRENCY_CACHE = "currencyCache";
 
   @NonNull private CacheManager cacheManager;
 
@@ -32,7 +30,6 @@ public class CacheConfiguration {
   public void evictCurrencyCaches() {
     log.info("Evicting all currency caches");
     evictCache(CURRENCY_EXCHANGE_CACHE);
-    evictCache(CURRENCY_CACHE);
   }
 
   @Scheduled(cron = "${dfa.cache.quote.eviciton}")
@@ -41,9 +38,4 @@ public class CacheConfiguration {
     evictCache(QUOTE_CACHE);
   }
 
-  @Scheduled(cron = "${dfa.cache.connector.eviciton}")
-  public void evictConnectorCaches() {
-    log.info("Evicting all connector caches");
-    evictCache(CONNECTOR_CACHE);
-  }
 }

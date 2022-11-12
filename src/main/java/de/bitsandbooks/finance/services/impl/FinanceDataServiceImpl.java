@@ -13,6 +13,8 @@ import de.bitsandbooks.finance.repositories.FinancePositionRepository;
 import de.bitsandbooks.finance.repositories.UserAccountRepository;
 import de.bitsandbooks.finance.services.FinanceDataService;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 @Component
 public class FinanceDataServiceImpl implements FinanceDataService {
+
+  private static final int TIMEOUT_SECONDS = 20;
 
   @NonNull private final ConnectorFacade connectorFacade;
 
@@ -148,51 +152,65 @@ public class FinanceDataServiceImpl implements FinanceDataService {
   @Override
   public List<FinancePositionEntity> addPositions(
       List<FinancePositionEntity> toAddFinancePositionEntityList, String externalIdentifier) {
-    checkPositionsExist(toAddFinancePositionEntityList);
     UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
-    toAddFinancePositionEntityList.forEach(
-        financePositionEntity -> {
-          financePositionEntity.setUserAccount(userAccountEntity);
-          financePositionEntity.setExternalIdentifier(UUID.randomUUID().toString());
-          financePositionEntity.setCurrency(financePositionEntity.getCurrency().toUpperCase());
-          userAccountEntity.getFinancePositionEntityList().add(financePositionEntity);
-        });
-    updateCurrencies(userAccountEntity.getFinancePositionEntityList());
-    financePositionRepository.saveAll(toAddFinancePositionEntityList);
+    Iterable<FinancePositionEntity> financePositionEntityIterable =
+        Flux.fromIterable(toAddFinancePositionEntityList)
+            .flatMap((this::updatePositionPriceAndCurrency))
+            .map(
+                entity -> {
+                  entity.setUserAccount(userAccountEntity);
+                  entity.setExternalIdentifier(UUID.randomUUID().toString());
+                  userAccountEntity.getFinancePositionEntityList().add(entity);
+                  return entity;
+                })
+            .collectList()
+            .block(Duration.of(TIMEOUT_SECONDS, ChronoUnit.SECONDS));
     userAccountRepository.save(userAccountEntity);
-    return IteratorUtils.toList(toAddFinancePositionEntityList.iterator());
+    return financePositionEntityIterable == null
+        ? Collections.emptyList()
+        : IteratorUtils.toList(financePositionEntityIterable.iterator());
   }
 
   @Transactional
   @Override
   public List<FinancePositionEntity> putPositions(
       List<FinancePositionEntity> financePositionEntityList, String externalIdentifier) {
-    checkPositionsExist(financePositionEntityList);
     UserAccountEntity userAccountEntity = getUserAccountEntity(externalIdentifier);
-    financePositionEntityList.forEach(
-        entity -> {
-          entity.setExternalIdentifier(UUID.randomUUID().toString());
-          entity.setUserAccount(userAccountEntity);
-          entity.setCurrency(entity.getCurrency().toUpperCase());
-        });
     userAccountEntity.getFinancePositionEntityList().clear();
-    userAccountEntity.getFinancePositionEntityList().addAll(financePositionEntityList);
-    updateCurrencies(userAccountEntity.getFinancePositionEntityList());
-    financePositionRepository.saveAll(financePositionEntityList);
+    Iterable<FinancePositionEntity> financePositionEntityIterable =
+        Flux.fromIterable(financePositionEntityList)
+            .flatMap((this::updatePositionPriceAndCurrency))
+            .map(
+                entity -> {
+                  entity.setUserAccount(userAccountEntity);
+                  entity.setExternalIdentifier(UUID.randomUUID().toString());
+                  userAccountEntity.getFinancePositionEntityList().add(entity);
+                  return entity;
+                })
+            .collectList()
+            .block(Duration.of(TIMEOUT_SECONDS, ChronoUnit.SECONDS));
     userAccountRepository.save(userAccountEntity);
-    return IteratorUtils.toList(userAccountEntity.getFinancePositionEntityList().iterator());
+    return financePositionEntityIterable == null
+        ? Collections.emptyList()
+        : IteratorUtils.toList(financePositionEntityIterable.iterator());
   }
 
-  private void updateCurrencies(List<FinancePositionEntity> financePositionEntityList) {
-    financePositionEntityList.forEach(
-        financePositionEntity -> {
-          boolean isCurrency = Currency.isCurrency(financePositionEntity.getIdentifier());
-          if (!isCurrency) {
-            String resolvedCurrency =
-                connectorFacade.getCurrency(financePositionEntity.getIdentifier());
-            financePositionEntity.setCurrency(resolvedCurrency.toUpperCase());
-          }
-        });
+  private Mono<FinancePositionEntity> updatePositionPriceAndCurrency(FinancePositionEntity entity) {
+    boolean isCurrency = Currency.isCurrency(entity.getIdentifier());
+    if (!isCurrency) {
+      return connectorFacade
+          .getActualValue(entity.getIdentifier())
+          .map(
+              valueDto -> {
+                entity.setCurrency(valueDto.getCurrency().toUpperCase());
+                entity.setPrice(calculatePrice(valueDto.getPrice(), entity.getAmount()));
+                return entity;
+              });
+    } else {
+      entity.setCurrency(entity.getIdentifier());
+      entity.setPrice(entity.getAmount());
+      return Mono.just(entity);
+    }
   }
 
   @Transactional
@@ -227,7 +245,8 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     FinancePositionEntity savedFinancePositionEntity =
         financePositionRepository.save(existingFinancePositionEntity);
     return positionToValue(savedFinancePositionEntity)
-        .flatMap(valueDto -> addValuesToFinancePositionEntity(financePositionEntity, valueDto));
+        .flatMap(
+            valueDto -> addValuesToFinancePositionEntity(savedFinancePositionEntity, valueDto));
   }
 
   private void updatePositionValues(
@@ -239,12 +258,13 @@ public class FinanceDataServiceImpl implements FinanceDataService {
     if (!financePositionEntity.getName().equals(existingFinancePositionEntity.getName())) {
       existingFinancePositionEntity.setName(financePositionEntity.getName());
     }
-    if (!financePositionEntity.getCurrency().equals(existingFinancePositionEntity.getCurrency())) {
-      existingFinancePositionEntity.setCurrency(financePositionEntity.getCurrency());
-    }
     if (!financePositionEntity.getAmount().equals(existingFinancePositionEntity.getAmount())) {
       existingFinancePositionEntity.setAmount(financePositionEntity.getAmount());
     }
+  }
+
+  private BigDecimal calculatePrice(BigDecimal price, BigDecimal amount) {
+    return price.multiply(amount);
   }
 
   private UserAccountEntity getUserAccountEntity(String externalIdentifier) {
@@ -256,12 +276,5 @@ public class FinanceDataServiceImpl implements FinanceDataService {
                     UserAccountEntity.class.getName(),
                     String.format(
                         "Could not find user with externalIdentifier '%s'", externalIdentifier)));
-  }
-
-  private void checkPositionsExist(List<FinancePositionEntity> financePositionEntityList) {
-    financePositionEntityList
-        .stream()
-        .map(FinancePositionEntity::getIdentifier)
-        .forEach(connectorFacade::checkPositionExists);
   }
 }

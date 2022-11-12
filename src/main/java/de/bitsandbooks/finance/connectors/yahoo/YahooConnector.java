@@ -1,6 +1,5 @@
 package de.bitsandbooks.finance.connectors.yahoo;
 
-import de.bitsandbooks.finance.connectors.AbstractFinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ConnectorType;
 import de.bitsandbooks.finance.connectors.FinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ForexService;
@@ -15,18 +14,20 @@ import java.util.Optional;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-@Order(0)
 @Component
 @RequiredArgsConstructor
-public class YahooConnector extends AbstractFinanceDataConnector
-    implements FinanceDataConnector, ForexService {
+public class YahooConnector implements FinanceDataConnector, ForexService {
 
   @NonNull private final YahooApi yahooApi;
+
+  @Override
+  public int getOrder() {
+    return 0;
+  }
 
   @Override
   public ConnectorType getConnectorType() {
@@ -47,27 +48,6 @@ public class YahooConnector extends AbstractFinanceDataConnector
               String currency = this.getCurrency(identifier, yahooChartDto);
               return new ValueDto(currency, new BigDecimal(price));
             });
-  }
-
-  @Override
-  public Mono<Boolean> hasActualValue(String identifier) {
-    return yahooApi
-        .getQuote(identifier)
-        .map(
-            yahooChartDto ->
-                Optional.ofNullable(yahooChartDto)
-                    .map(YahooChartDto::getChart)
-                    .map(Chart::getResult)
-                    .map(result -> !result.isEmpty())
-                    .filter(Boolean::booleanValue)
-                    .isPresent());
-  }
-
-  @Override
-  public Mono<String> getCurrency(String identifier) {
-    return yahooApi
-        .getQuote(identifier)
-        .map(yahooChartDto -> this.getCurrency(identifier, yahooChartDto));
   }
 
   @Override

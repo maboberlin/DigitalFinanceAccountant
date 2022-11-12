@@ -1,6 +1,5 @@
 package de.bitsandbooks.finance.connectors.alphavantage;
 
-import de.bitsandbooks.finance.connectors.AbstractFinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ConnectorType;
 import de.bitsandbooks.finance.connectors.FinanceDataConnector;
 import de.bitsandbooks.finance.connectors.ForexService;
@@ -15,16 +14,13 @@ import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Slf4j
-@Order(10)
 @Component
 @RequiredArgsConstructor
-public class AlphaVantageConnector extends AbstractFinanceDataConnector
-    implements FinanceDataConnector, ForexService {
+public class AlphaVantageConnector implements FinanceDataConnector, ForexService {
 
   private static final String DEFAULT_ALPHAVANTAGE_CURRENCY = "USD";
 
@@ -33,6 +29,11 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
   @Override
   public ConnectorType getConnectorType() {
     return ConnectorType.ALPHA_VANTAGE;
+  }
+
+  @Override
+  public int getOrder() {
+    return 10;
   }
 
   @Override
@@ -108,20 +109,5 @@ public class AlphaVantageConnector extends AbstractFinanceDataConnector
   private Comparator<? super Map.Entry<String, AlphaVantageTimeSeriesDailyAdjustedDto.DailyData>>
       compareByDateComparator() {
     return Map.Entry.comparingByKey(Comparator.reverseOrder());
-  }
-
-  @Override
-  public Mono<Boolean> hasActualValue(String identifier) {
-    return alphaVantageApi
-        .getQuote(identifier)
-        .map(AlphaVantageQuoteDto::getGlobalQuote)
-        .map(AlphaVantageQuoteDto.GlobalQuote::get_05Price)
-        .map(s -> Boolean.TRUE)
-        .switchIfEmpty(Mono.just(Boolean.FALSE));
-  }
-
-  @Override
-  public Mono<String> getCurrency(String identifier) {
-    return Mono.just(DEFAULT_ALPHAVANTAGE_CURRENCY);
   }
 }
