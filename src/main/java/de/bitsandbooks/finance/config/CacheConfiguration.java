@@ -37,5 +37,4 @@ public class CacheConfiguration {
     log.info("Evicting all position caches");
     evictCache(QUOTE_CACHE);
   }
-
 }
