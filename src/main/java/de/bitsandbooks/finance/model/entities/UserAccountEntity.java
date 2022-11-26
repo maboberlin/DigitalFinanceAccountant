@@ -42,6 +42,10 @@ public class UserAccountEntity {
   @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<FinancePositionEntity> financePositionEntityList = new ArrayList<>();
 
+  @JsonIgnore
+  @OneToMany(mappedBy = "userAccount", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<SnapshotEntity> snapshotEntityList = new ArrayList<>();
+
   @PrePersist
   private void setExternalIdentifier() {
     this.setExternalIdentifier(UUID.randomUUID().toString());

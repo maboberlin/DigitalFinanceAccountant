@@ -33,15 +33,21 @@ const routes = [
     component: Assets,
   },
   {
+    path: "/snapshots",
+    name: "snapshots",
+    // lazy-loaded
+    component: Snapshots,
+  },
+  {
     path: "/user",
     name: "user",
     component: User,
   },
-{
-  path: "/logout",
-  name: "logout",
-  component: Login,
-},
+  {
+    path: "/logout",
+    name: "logout",
+    component: Login,
+  }
 ];
 const router = createRouter({
   history: createWebHistory(),
