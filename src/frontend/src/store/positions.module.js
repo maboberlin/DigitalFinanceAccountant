@@ -57,6 +57,10 @@ export const positions = {
         this.dispatch('loadTotal', { accountId: accountExternalIdentifierWithCurrency.accountId, currency: accountExternalIdentifierWithCurrency.currency });
     },
 
+    changeCurrentCurrency ({commit}, currency) {
+        commit('SET_TOTAL_CURRENCY', currency);
+    },
+
     loadTotal ({commit}, accountExternalIdentifierWithCurrency) {
       const path = `/api/finance/total/${accountExternalIdentifierWithCurrency.accountId}?currency=${accountExternalIdentifierWithCurrency.currency}&byType=true`
       axios.get(

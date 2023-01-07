@@ -78,6 +78,7 @@
     <div>
         <button class="button btn-primary" @click="addPosition">Add Position</button>
     </div>
+    <hr>
 </template>
 
 <script>

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -29,7 +30,7 @@ public class SnapshotEntity {
   )
   private String id;
 
-  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
   @NotNull
   private OffsetDateTime snapshotTimestamp;
 
@@ -44,6 +45,10 @@ public class SnapshotEntity {
   private BigDecimal realEstateValue;
 
   private BigDecimal resourceValue;
+
+  @Transient private BigDecimal total;
+
+  @NotEmpty private String currency;
 
   @JsonIgnore
   @ManyToOne(fetch = FetchType.LAZY)

@@ -22,10 +22,10 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link v-if="currentUser" to="/accounts" class="nav-link">Accounts</router-link>
+          <router-link v-if="currentUser" to="/accounts" class="nav-link"><b>Accounts</b></router-link>
         </li>
         <li class="nav-item">
-          <router-link v-if="currentUser" to="/snapshots" class="nav-link">Snapshots</router-link>
+          <router-link v-if="currentUser" to="/snapshots" class="nav-link"><b>Snapshots</b></router-link>
         </li>
         <li class="nav-item" @click.prevent="logOut">
             <router-link v-if="currentUser" to="/logout" class="nav-link"><font-awesome-icon icon="sign-out-alt" />LogOut</router-link>
@@ -52,3 +52,8 @@ export default {
   }
 };
 </script>
+<style scoped>
+  .nav-link {
+    margin-right: 10px;
+  }
+</style>

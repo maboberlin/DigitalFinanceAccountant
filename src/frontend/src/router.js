@@ -3,6 +3,7 @@ import Login from "./components/Login.vue";
 import Empty from "./components/Empty.vue";
 import Register from "./components/Register.vue";
 import User from "./components/User.vue";
+import Snapshots from "./components/Snapshots.vue";
 // lazy-loaded
 const Accounts = () => import("./components/Accounts.vue")
 const Assets = () => import("./components/Assets.vue")

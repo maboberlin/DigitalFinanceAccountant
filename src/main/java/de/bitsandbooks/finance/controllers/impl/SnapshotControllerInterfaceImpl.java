@@ -1,14 +1,10 @@
 package de.bitsandbooks.finance.controllers.impl;
 
 import de.bitsandbooks.finance.controllers.SnapshotControllerInterface;
-import de.bitsandbooks.finance.model.dtos.PositionType;
 import de.bitsandbooks.finance.model.dtos.UserSnapshotsDto;
 import de.bitsandbooks.finance.model.entities.SnapshotEntity;
 import de.bitsandbooks.finance.services.SnapshotService;
-import java.math.BigDecimal;
-import java.util.Map;
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,9 +49,8 @@ public class SnapshotControllerInterfaceImpl implements SnapshotControllerInterf
   public Mono<SnapshotEntity> createSnapshot(
       @NotEmpty @PathVariable(name = "userAccountExternalIdentifier")
           String userAccountExternalIdentifier,
-      @NotNull @RequestBody Map<PositionType, BigDecimal> positionTypeValueMap) {
+      @NotEmpty @RequestParam("currency") String currency) {
     log.info("Creating snapshot for userAccountIdentifier '{}'", userAccountExternalIdentifier);
-    return Mono.fromCallable(
-        () -> snapshotService.createSnapshot(userAccountExternalIdentifier, positionTypeValueMap));
+    return snapshotService.createSnapshot(userAccountExternalIdentifier, currency);
   }
 }

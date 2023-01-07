@@ -1,8 +1,6 @@
 package de.bitsandbooks.finance.model.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import de.bitsandbooks.finance.model.entities.SnapshotEntity;
-import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,5 +14,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class UserSnapshotsDto {
 
-  private Map<String, List<SnapshotEntity>> snapshotMap;
+  private Map<String, SnapshotListDto> snapshotMap;
 }
